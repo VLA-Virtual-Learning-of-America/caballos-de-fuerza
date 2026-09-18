@@ -89,7 +89,7 @@ function aligerar(dibujo) {
 
 const corridas = () => leer(K_CORRIDAS, []);
 
-export function guardarCorrida({ nombre, tiempo, dibujo, color, curso, gritos, acciones }) {
+export function guardarCorrida({ nombre, tiempo, dibujo, color, curso, gritos, acciones, sticker }) {
   if (!Number.isFinite(tiempo)) return;
   const lista = corridas();
   lista.push({
@@ -99,6 +99,7 @@ export function guardarCorrida({ nombre, tiempo, dibujo, color, curso, gritos, a
     tiempo,
     color,
     dibujo: aligerar(dibujo),
+    sticker: typeof sticker === "string" ? sticker : null,
     gritos: Array.isArray(gritos) ? gritos.map(t => Math.round(t * 1000) / 1000) : [],
     // Saltos y agaches, para que el fantasma repita también los obstáculos
     acciones: Array.isArray(acciones) ? acciones : []

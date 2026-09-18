@@ -6,6 +6,7 @@
 */
 
 import { miniatura } from "./scene.js";
+import { stickerPorCodigo, pintarSticker } from "./stickers.js";
 
 const W = 1080, H = 1350;
 const M = 88;                       // margen
@@ -97,6 +98,13 @@ export function pintarPoster(canvas, orden, curso) {
     c.fillText(r.meta === null ? "DNF" : `${r.meta.toFixed(2)}s`, W - M, base);
     c.textAlign = "left";
 
+    const sticker = stickerPorCodigo(r.sticker);
+    if (sticker) {
+      pintarSticker(c, sticker.codigo, M + 168, base + 7, 36, 18);
+      c.font = T(18, 450);
+      c.fillStyle = TEXTO_2;
+      c.fillText(sticker.nombre, M + 214, base + 22, 540);
+    }
     y += alto;
     filete(c, M, y, W - M, i === orden.length - 1 ? FILETE : "#20251F");
   });

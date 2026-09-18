@@ -19,6 +19,7 @@ import * as almacen from "./store.js";
 import { pintarPoster } from "./poster.js";
 import { crearSala } from "./sala.js";
 import { pintarQR } from "./qr.js";
+import { STICKERS, stickerPorCodigo, etiquetaSticker, renderConStickers } from "./stickers.js";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -201,7 +202,18 @@ const cifras = $("#cifras");
 
 const tablero = crearTablero($("#pad"), vacio => {
   $("#pad-vacio").toggleAttribute("data-oculto", !vacio);
+  $("#in-sticker").disabled = vacio;
 });
+
+const selectorSticker = $("#in-sticker");
+selectorSticker.add(new Option("Sin sticker", ""));
+STICKERS.forEach(s => selectorSticker.add(new Option(s.codigo + " · " + s.nombre, s.codigo)));
+function previsualizarSticker() {
+  $("#sticker-preview").replaceChildren();
+  const etiqueta = etiquetaSticker(selectorSticker.value);
+  if (etiqueta) $("#sticker-preview").append(etiqueta);
+}
+selectorSticker.addEventListener("change", previsualizarSticker);
 
 $("#btn-undo").addEventListener("click", () => tablero.deshacer());
 $("#btn-clear").addEventListener("click", () => tablero.limpiar());
@@ -255,6 +267,8 @@ function prepararFicha() {
   $("#in-consent").checked = false;
   $("#enroll-err").textContent = "";
   $("#btn-enroll-back").textContent = estado.idx === 0 ? "Volver" : "Atrás, corregir el anterior";
+  selectorSticker.value = "";
+  previsualizarSticker();
   tablero.limpiar();
   tablero.tinta = color;
   pintarInscritos();
@@ -270,6 +284,11 @@ $("#btn-enroll-back").addEventListener("click", () => {
   prepararFicha();
   $("#in-name").value = j.nombre;
   tablero.cargar(j.trazosCrudos);
+  $("#in-phone").value = j.telefono || "";
+  $("#in-email").value = j.correo || "";
+  $("#in-consent").checked = !!j.consiente;
+  selectorSticker.value = j.sticker || "";
+  previsualizarSticker();
 });
 
 $("#ficha").addEventListener("submit", e => { e.preventDefault(); inscribir(); });
@@ -299,7 +318,8 @@ function inscribir() {
 
   const crudos = tablero.trazos();
   estado.jinetes.push({
-    nombre,
+    nombre, telefono, correo, consiente,
+    sticker: stickerPorCodigo(selectorSticker.value)?.codigo || null,
     color: CARRILES[estado.idx],
     dibujo: normalizar(crudos),
     trazosCrudos: crudos,
@@ -467,6 +487,7 @@ function corredores() {
       nombre: f.nombre,
       color: CARRILES[todos.length],
       dibujo: f.dibujo,
+      sticker: f.sticker || null,
       esFantasma: true,
       gritos: f.gritos,
       acciones: f.acciones || [],
@@ -542,7 +563,9 @@ let ultimoCuadro = 0, ultimoHUD = 0, mapaTeclas = new Map(), mapaMandos = new Ma
 
 function arrancar() {
   const lista = corredores();
-  estado.carrera = crearCarrera(lista, estado.curso);
+  estado.carrera = crearCarrera(lista.map(({ sticker, ...r }) => r), estado.curso);
+  // Metadato visual; el motor no lo recibe ni lo utiliza.
+  estado.carrera.corredores.forEach((r, i) => { r.sticker = lista[i].sticker || null; });
 
   mapaTeclas = new Map();
   mapaMandos = new Map();
@@ -602,7 +625,7 @@ function cuentaAtras(listo) {
   const pasos = ["3", "2", "1", "YA"];
   let k = 0;
   salida.hidden = false;
-  renderer.render(estado.carrera, estado.curso, 1 / 60);
+  renderConStickers(renderer, $("#track"), estado.carrera, estado.curso, 1 / 60);
   const tic = () => {
     if (!estado.carrera) return;
     if (k >= pasos.length) { salida.hidden = true; salida.removeAttribute("data-ya"); listo(); return; }
@@ -621,7 +644,7 @@ function bucle(ahora) {
   ultimoCuadro = ahora;
 
   avanzar(c, dt);
-  renderer.render(c, estado.curso, dt);
+  renderConStickers(renderer, $("#track"), c, estado.curso, dt);
   $("#hud-clock").textContent = c.t.toFixed(2);
 
   pintarPerfil(c);
@@ -772,7 +795,7 @@ function mostrarActa(c) {
   orden.forEach(r => {
     if (!r.esBot && !r.esFantasma && r.meta !== null) {
       almacen.guardarCorrida({
-        nombre: r.nombre, tiempo: r.meta, dibujo: r.dibujo, color: r.color,
+        nombre: r.nombre, tiempo: r.meta, dibujo: r.dibujo, color: r.color, sticker: r.sticker,
         curso: estado.curso.id, gritos: r.registro, acciones: r.registroAcciones
       });
     }
@@ -822,7 +845,7 @@ function mostrarActa(c) {
       ? `${r.limpios} de ${estado.curso.obstaculos.length} limpios · ${r.gritos} pulsaciones`
       : `${r.gritos} pulsaciones · ritmo ${(r.ritmo * 100).toFixed(0)}%`,
     tiempo: r.meta === null ? "no llegó" : `${r.meta.toFixed(2)}s`,
-    dibujo: r.dibujo, color: r.color, gana: i === 0,
+    dibujo: r.dibujo, color: r.color, sticker: r.sticker, gana: i === 0,
     apagado: r.esBot || r.esFantasma
   })));
 
@@ -886,7 +909,7 @@ function pintarHistorico(yo) {
 }
 
 /** Una fila de resultado: misma pieza para el acta y para los rankings. */
-function filaResultado({ pos, nombre, rol, meta, tiempo, dibujo, color, gana, apagado }) {
+function filaResultado({ pos, nombre, rol, meta, tiempo, dibujo, color, sticker, gana, apagado }) {
   const li = document.createElement("li");
   li.className = "fila";
   li.style.setProperty("--carril", color);
@@ -906,6 +929,8 @@ function filaResultado({ pos, nombre, rol, meta, tiempo, dibujo, color, gana, ap
   t.className = "fila-tiempo";
   t.textContent = tiempo;
   li.append(cuerpo, t);
+  const etiqueta = etiquetaSticker(sticker);
+  if (etiqueta) cuerpo.append(etiqueta);
   return li;
 }
 

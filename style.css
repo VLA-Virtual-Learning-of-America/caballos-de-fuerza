@@ -285,7 +285,7 @@ em{font-style:normal;color:var(--vla)}
   background:var(--tinta-1);overflow:hidden;
 }
 /* clamp y no min(): con un suelo, el tablero nunca colapsa a cero alto */
-#pad{display:block;width:100%;height:clamp(260px,50vh,540px);touch-action:none;cursor:crosshair}
+#pad{display:block;width:100%;height:clamp(240px,calc(50vh - 64px),476px);touch-action:none;cursor:crosshair}
 .tablero-vacio{
   position:absolute;inset:0;display:flex;flex-direction:column;gap:var(--e-2);
   align-items:center;justify-content:center;text-align:center;
@@ -595,3 +595,14 @@ em{font-style:normal;color:var(--vla)}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
+
+/* Certificaciones: filetes y texto, sin tarjetas. */
+.sticker-selector{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;border-top:1px solid var(--filete);padding-top:8px;color:var(--texto-2);font-size:.85rem}
+.sticker-selector label,.sticker-selector small{grid-column:1/-1}
+.sticker-selector select{min-width:0;width:100%;font:inherit;color:var(--texto);background:var(--tinta-0);border:0;border-bottom:1px solid var(--filete);padding:8px 0}
+.sticker-selector select:focus-visible{outline:1px solid var(--vla)}
+.sticker-selector select:disabled{opacity:.5}
+.sticker-etiqueta{display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--texto-2);line-height:1.4}
+.sticker-etiqueta img{width:40px;height:24px;object-fit:contain;background:#F2F6F2;padding:3px;flex:none}
+#sticker-preview .sticker-etiqueta{font-size:0}
+#sticker-preview:empty{display:none}
