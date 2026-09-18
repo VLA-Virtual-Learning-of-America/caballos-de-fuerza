@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Caballos de Fuerza · VLA</title>
+<meta name="description" content="Dibuje su caballo. Póngalo a correr. Experiencia de stand de Virtual Learning of America para cuatro participantes.">
+<link rel="stylesheet" href="./fonts/fonts.css">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<header class="bar" id="bar">
+  <button class="bar-marca" id="bar-marca">Caballos de fuerza<i>VLA</i></button>
+  <nav class="bar-nav" id="bar-nav"></nav>
+</header>
+
+<!-- ════════ INICIO ════════ -->
+<section class="pantalla es-activa" id="p-home">
+  <canvas class="hero-lienzo" id="hero"></canvas>
+  <div class="bloque bloque-abajo">
+    <p class="kicker">Virtual Learning of America</p>
+    <h1 class="hero-titulo">Caballos<br>de fuerza<em>.</em></h1>
+    <p class="sub">Dibuje su caballo. Póngalo a correr.</p>
+    <p class="hero-datos">
+      <span>Hasta 4 personas</span>
+      <span>Un minuto</span>
+      <span>Los mejores tiempos ganan créditos VLA</span>
+      <span>Dibujar bien no sirve de nada</span>
+    </p>
+    <div class="acciones">
+      <button class="accion" id="btn-new">Empezar<kbd>Enter</kbd></button>
+      <button class="enlace" id="btn-ranking">Ranking del evento</button>
+    </div>
+  </div>
+  <p class="pie" id="pie-stand"></p>
+</section>
+
+<!-- ════════ QUÉ CARRERA ════════ -->
+<section class="pantalla" id="p-carrera">
+  <div class="bloque bloque-arriba">
+    <h2 class="titulo">¿Qué carrera<em>?</em></h2>
+    <ol class="lista" id="lista-carreras"></ol>
+    <div class="acciones"><button class="enlace" data-ir="home">Volver</button></div>
+  </div>
+</section>
+
+<!-- ════════ CUÁNTOS JINETES ════════ -->
+<section class="pantalla" id="p-setup">
+  <div class="bloque bloque-abajo">
+    <h2 class="titulo">¿Cuántos jinetes?</h2>
+    <p class="sub" id="setup-sub"></p>
+    <div class="cifras" id="cifras"></div>
+    <div class="acciones">
+      <button class="enlace" id="btn-celulares">Que jueguen desde su celular</button>
+      <button class="enlace" data-ir="carrera">Volver</button>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ SALA DE CELULARES ════════ -->
+<section class="pantalla" id="p-lobby">
+  <div class="lobby">
+    <div class="lobby-cuerpo">
+      <h2 class="titulo">Cada quien en su celular<em>.</em></h2>
+      <p class="sub">Escanee el código con la cámara. No hace falta instalar nada.</p>
+      <ol class="lobby-pasos">
+        <li>Conéctese al WiFi del stand</li>
+        <li>Escanee el código o escriba la dirección</li>
+        <li>Dibuje su caballo en el celular</li>
+      </ol>
+      <p class="lobby-url" id="lobby-url"></p>
+      <p class="lobby-codigo">Sala <b id="lobby-codigo">····</b></p>
+      <div class="acciones">
+        <button class="accion" id="btn-lobby-ir">Empezar la carrera</button>
+        <button class="enlace" data-ir="setup">Mejor con el teclado</button>
+      </div>
+      <p class="nota" id="lobby-aviso"></p>
+    </div>
+    <div class="lobby-qr">
+      <canvas id="qr"></canvas>
+      <ol class="lobby-jinetes" id="lobby-jinetes"></ol>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ REGISTRO Y DIBUJO ════════ -->
+<section class="pantalla" id="p-enroll">
+  <div class="enroll">
+    <div class="tablero">
+      <div class="tablero-marco">
+        <canvas id="pad"></canvas>
+        <div class="tablero-vacio" id="pad-vacio">
+          <b>Su idea de un caballo va aquí</b>
+          <span>Lo feo corre igual de rápido: el dibujo no da ventaja.</span>
+        </div>
+        <span class="tablero-rumbo">Corre hacia allá</span>
+      </div>
+      <div class="tablero-barra">
+        <button class="enlace" id="btn-borrow">Présteme uno</button>
+        <div class="tablero-btns">
+          <button class="enlace enlace-mini" id="btn-undo">Deshacer</button>
+          <button class="enlace enlace-mini" id="btn-clear">Limpiar</button>
+        </div>
+      </div>
+      <div class="inscritos" id="inscritos"></div>
+    </div>
+
+    <form class="ficha" id="ficha" novalidate>
+      <h2 class="titulo titulo-sm">Su turno<em id="enroll-punto">.</em></h2>
+      <p class="ficha-motivo">
+        Su tiempo entra al ranking del evento. <b>Los mejores se llevan créditos VLA</b>,
+        así que necesitamos cómo avisarle si gana.
+      </p>
+      <label class="campo">
+        <span>Nombre del jinete</span>
+        <input type="text" id="in-name" maxlength="18" placeholder="Como sale en el acta" autocomplete="off">
+      </label>
+      <label class="campo">
+        <span>WhatsApp <i>· obligatorio</i></span>
+        <input type="tel" id="in-phone" maxlength="24" placeholder="+506 8888 8888" autocomplete="off" inputmode="tel">
+      </label>
+      <label class="campo">
+        <span>Correo electrónico <i>· obligatorio</i></span>
+        <input type="email" id="in-email" maxlength="60" placeholder="nombre@ejemplo.com" autocomplete="off" inputmode="email">
+      </label>
+      <label class="permiso">
+        <input type="checkbox" id="in-consent">
+        <span>Autorizo a VLA a contactarme para avisarme si gano y para hablarme de sus certificaciones. Puedo pedir que borren mis datos cuando quiera.</span>
+      </label>
+      <p class="aviso" id="enroll-err" role="alert"></p>
+      <div class="acciones">
+        <button type="submit" class="accion" id="btn-enroll-next">Esto es un caballo</button>
+        <button type="button" class="enlace" id="btn-enroll-back">Atrás</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ════════ PARRILLA ════════ -->
+<section class="pantalla" id="p-grid">
+  <div class="parrilla" id="parrilla"></div>
+  <div class="bloque bloque-abajo">
+    <h2 class="titulo titulo-sm">Cada quien con su botón<em>.</em></h2>
+    <p class="sub">Ritmo constante gana; machacar sin ritmo no sirve.</p>
+    <div class="acciones">
+      <button class="accion" id="btn-go">Dar la salida<kbd>Enter</kbd></button>
+      <button class="enlace" data-ir="home">Cancelar</button>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ CARRERA ════════ -->
+<section class="pantalla pantalla-carrera" id="p-race">
+  <canvas id="track"></canvas>
+  <div class="cronometro"><span id="hud-clock">0.00</span><i>s</i></div>
+  <div class="tabla-viva" id="tabla-viva"></div>
+  <canvas class="perfil" id="perfil"></canvas>
+  <p class="recordatorio" id="recordatorio">Ritmo constante · Esc para abandonar</p>
+  <div class="salida" id="salida" hidden>
+    <b id="salida-cifra">3</b>
+    <div class="salida-teclas" id="salida-teclas"></div>
+  </div>
+</section>
+
+<!-- ════════ ACTA ════════ -->
+<section class="pantalla" id="p-result">
+  <div class="acta">
+    <div class="acta-cuerpo">
+      <p class="kicker" id="acta-nota"></p>
+      <h2 class="acta-puesto" id="acta-puesto">1.º</h2>
+      <p class="sub" id="acta-frase"></p>
+      <p class="nota" id="acta-marca"></p>
+      <ol class="tabla" id="tabla-final"></ol>
+      <p class="acta-vla">
+        Su marca queda en el ranking del evento. <b>Los mejores tiempos se llevan créditos VLA</b>
+        y le escribimos al WhatsApp que dejó. Mientras tanto, pregunte en el stand por su certificación.
+      </p>
+      <div class="acciones">
+        <button class="accion" id="btn-again">Otra carrera<kbd>Enter</kbd></button>
+        <button class="enlace" id="btn-lamina">Lámina para la foto</button>
+        <button class="enlace" data-ir="home">Inicio</button>
+      </div>
+    </div>
+
+    <aside class="tablero-historico">
+      <h3 class="panel-titulo">Ranking histórico<em>.</em></h3>
+      <p class="panel-sub" id="historico-sub"></p>
+      <ol class="tabla tabla-historico" id="tabla-historico"></ol>
+      <p class="nota" id="historico-pie">Una marca por corrida. Toque «Retar» para correr contra esa persona.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- ════════ LÁMINA A PANTALLA COMPLETA ════════ -->
+<div class="capa capa-lamina" id="capa-lamina" hidden>
+  <div class="lamina-caja">
+    <canvas id="poster"></canvas>
+    <div class="acciones">
+      <button class="accion" id="btn-lamina-close">Listo</button>
+      <button class="enlace" id="btn-save-img">Descargar</button>
+    </div>
+    <p class="nota">Tómele una foto con el celular y llévesela.</p>
+  </div>
+</div>
+
+<!-- ════════ RANKING ════════ -->
+<section class="pantalla" id="p-ranking">
+  <div class="bloque bloque-arriba">
+    <h2 class="titulo">Ranking del evento<em>.</em></h2>
+    <div class="pestanas" id="pestanas-ranking"></div>
+    <ol class="tabla tabla-ranking" id="tabla-ranking"></ol>
+    <div class="acciones"><button class="enlace" data-ir="home">Volver</button></div>
+  </div>
+</section>
+
+<!-- ════════ BOTONES DE CARRIL ════════ -->
+<div class="capa" id="capa-teclas" hidden>
+  <div class="capa-caja" role="dialog" aria-modal="true" aria-label="Botón de cada carril">
+    <h3 class="titulo titulo-sm">Botón de cada carril<em>.</em></h3>
+    <p class="nota">Toque un carril y presione la tecla que quiera darle. Si usa botones arcade USB, presione el botón físico: llega como una tecla.</p>
+    <div class="teclas" id="lista-teclas"></div>
+    <div class="acciones">
+      <button class="accion" id="btn-keys-close">Listo</button>
+      <button class="enlace" id="btn-keys-default">Volver a A F J L</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ MODO PROMOTOR ════════ -->
+<div class="capa" id="capa-stand" hidden>
+  <div class="capa-caja" role="dialog" aria-modal="true" aria-label="Operación del stand">
+    <h3 class="titulo titulo-sm">Operación del stand<em>.</em></h3>
+    <p class="nota" id="nota-stand"></p>
+    <div class="acciones">
+      <button class="accion" id="btn-export">Exportar contactos</button>
+      <button class="enlace" id="btn-keys-open">Botones de carril</button>
+    </div>
+    <div class="acciones">
+      <button class="enlace enlace-riesgo" id="btn-reset">Reiniciar evento</button>
+      <button class="enlace" id="btn-stand-close">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="./src/app.js"></script>
+  <script type="module" src="./src/integridad.js"></script>
+</body>
+</html>

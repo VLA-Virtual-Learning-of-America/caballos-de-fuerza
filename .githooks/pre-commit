@@ -1,0 +1,11 @@
+#!/bin/sh
+# Bloquea el commit si se rompió la física, la perspectiva o el diseño.
+# Actívalo una vez con:  git config core.hooksPath .githooks
+echo "Verificando integridad del juego…"
+if ! node verificar.js; then
+  echo ""
+  echo "COMMIT BLOQUEADO. La verificación falló: ver arriba y HANDOFF.md."
+  echo "La física y la perspectiva están congeladas. Si de verdad hay que"
+  echo "cambiarlas, requiere aprobación de VLA y regenerar blindaje.json a mano."
+  exit 1
+fi

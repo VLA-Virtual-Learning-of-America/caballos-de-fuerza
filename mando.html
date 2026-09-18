@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0F1210">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Su mando · Caballos de Fuerza</title>
+<link rel="stylesheet" href="./fonts/fonts.css">
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./mando.css">
+</head>
+<body class="mando">
+
+<!-- ════════ ENTRAR ════════ -->
+<section class="m-pantalla es-activa" id="m-entrar">
+  <header class="m-cabecera">
+    <span class="m-marca">Caballos de fuerza<i>VLA</i></span>
+  </header>
+  <form class="m-cuerpo" id="m-ficha" novalidate>
+    <h1 class="m-titulo">Su mando<em>.</em></h1>
+    <p class="m-motivo">
+      Su tiempo entra al ranking del evento. <b>Los mejores se llevan créditos VLA</b>,
+      así que necesitamos cómo avisarle si gana.
+    </p>
+
+    <label class="m-campo">
+      <span>Código de la sala</span>
+      <input type="text" id="m-sala" maxlength="4" autocapitalize="characters" autocomplete="off"
+             inputmode="text" placeholder="ABCD" class="m-sala-input">
+    </label>
+    <label class="m-campo">
+      <span>Su nombre</span>
+      <input type="text" id="m-nombre" maxlength="18" autocomplete="off" placeholder="Como sale en el acta">
+    </label>
+    <label class="m-campo">
+      <span>WhatsApp <i>· obligatorio</i></span>
+      <input type="tel" id="m-tel" maxlength="24" inputmode="tel" autocomplete="off" placeholder="+506 8888 8888">
+    </label>
+    <label class="m-campo">
+      <span>Correo electrónico <i>· obligatorio</i></span>
+      <input type="email" id="m-correo" maxlength="60" inputmode="email" autocomplete="off" placeholder="nombre@ejemplo.com">
+    </label>
+    <label class="m-permiso">
+      <input type="checkbox" id="m-consent">
+      <span>Autorizo a VLA a contactarme para avisarme si gano y para hablarme de sus certificaciones.</span>
+    </label>
+
+    <p class="m-aviso" id="m-error" role="alert"></p>
+    <button class="m-accion" type="submit" id="m-entrar-btn">Entrar a la sala</button>
+  </form>
+</section>
+
+<!-- ════════ DIBUJO ════════ -->
+<section class="m-pantalla" id="m-dibujo">
+  <header class="m-cabecera">
+    <span class="m-marca">Su caballo<i id="m-carril-1">1</i></span>
+    <span class="m-dato" id="m-quien"></span>
+  </header>
+  <div class="m-pad-zona">
+    <div class="m-pad-marco">
+      <canvas id="m-pad"></canvas>
+      <div class="m-pad-vacio" id="m-pad-vacio">
+        <b>Dibuje aquí con el dedo</b>
+        <span>Lo feo corre igual de rápido</span>
+      </div>
+      <span class="m-rumbo">Corre hacia allá →</span>
+    </div>
+  </div>
+  <div class="m-barra">
+    <button class="m-chico" id="m-prestar">Présteme uno</button>
+    <button class="m-chico" id="m-deshacer">Deshacer</button>
+    <button class="m-chico" id="m-limpiar">Limpiar</button>
+  </div>
+  <button class="m-accion" id="m-listo">Esto es un caballo</button>
+</section>
+
+<!-- ════════ ESPERA ════════ -->
+<section class="m-pantalla" id="m-espera">
+  <div class="m-centro">
+    <canvas class="m-mini" id="m-mini"></canvas>
+    <h2 class="m-titulo" id="m-espera-titulo">Listo<em>.</em></h2>
+    <p class="m-sub" id="m-espera-sub">Mire la pantalla grande.</p>
+  </div>
+</section>
+
+<!-- ════════ MANDO DE CARRERA ════════ -->
+<section class="m-pantalla m-pantalla-juego" id="m-juego">
+  <div class="m-marcador">
+    <span class="m-puesto" id="m-puesto">–</span>
+    <span class="m-metros" id="m-metros"></span>
+  </div>
+  <button class="m-boton m-boton-salto" id="m-salto"><i>↑</i>Saltar</button>
+  <button class="m-boton m-boton-correr" id="m-correr">¡Arre!</button>
+  <button class="m-boton m-boton-agache" id="m-agache"><i>↓</i>Agacharse</button>
+  <p class="m-pista" id="m-pista">Ritmo constante gana</p>
+</section>
+
+<!-- ════════ FIN ════════ -->
+<section class="m-pantalla" id="m-fin">
+  <div class="m-centro">
+    <h2 class="m-titulo">Gracias<em>.</em></h2>
+    <p class="m-sub">Mire la pantalla grande para ver el acta.</p>
+    <button class="m-accion" id="m-otra">Volver a entrar</button>
+  </div>
+</section>
+
+<div class="m-estado" id="m-estado" hidden></div>
+
+<script type="module" src="./src/mando.js"></script>
+  <script type="module" src="./src/integridad.js"></script>
+</body>
+</html>

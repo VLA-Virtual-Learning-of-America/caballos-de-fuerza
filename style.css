@@ -1,0 +1,597 @@
+/* ═══════════════════════════════════════════════════
+   CABALLOS DE FUERZA · VLA
+   Ver DESIGN.md. Carril estético: tablero de cronometraje
+   de federación, con la gramática de una página de producto.
+   ═══════════════════════════════════════════════════ */
+
+:root{
+  /* Neutros con un matiz de verde de marca. Ni negro ni blanco puros. */
+  --tinta-0:oklch(0.15 0.008 155);
+  --tinta-1:oklch(0.19 0.009 155);
+  --apagado:oklch(0.46 0.010 155);        /* placeholders y elementos inertes */
+  --filete:oklch(0.32 0.010 155 / .45);
+  --filete-suave:oklch(0.32 0.010 155 / .22);
+
+  --texto:oklch(0.96 0.006 155);          /* 17.6:1 */
+  --texto-2:oklch(0.72 0.008 155);        /* 7.9:1  */
+  --texto-3:oklch(0.66 0.008 155);        /* 5.1:1 — el mínimo para texto pequeño */
+
+  /* El verde es el literal de marca. En OKLCH se desviaba a #1FE97C y
+     PRODUCT.md dice que esta combinación no se negocia. */
+  --vla:#00E676;
+  --vla-hondo:oklch(0.28 0.09 152);
+  --sobre-vla:oklch(0.20 0.04 152);
+  --alarma:oklch(0.70 0.19 25);
+
+  /* Carriles: el trazo del dibujo en pista, la miniatura y la fila */
+  --l1:#00E676; --l2:#FF6200; --l3:#22D3EE; --l4:#E879F9;
+
+  --tipo:"Archivo","Helvetica Neue",system-ui,sans-serif;
+
+  --t-hero:clamp(3.4rem,8vw,9rem);
+  --t-titulo:clamp(2.1rem,4.2vw,4rem);
+  --t-titulo-sm:clamp(1.7rem,2.6vw,2.4rem);
+  --t-sub:clamp(1.02rem,1.45vw,1.45rem);
+  --t-cuerpo:clamp(.88rem,1vw,1.02rem);
+  --t-meta:.82rem;
+
+  --e-1:4px; --e-2:8px; --e-3:16px; --e-4:24px;
+  --e-5:40px; --e-6:64px; --e-7:96px;
+
+  --curva:cubic-bezier(.16,1,.3,1);
+  --borde-pantalla:clamp(22px,4.2vw,72px);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--tinta-0);
+  color:var(--texto-2);
+  font-family:var(--tipo);
+  font-size:var(--t-cuerpo);
+  line-height:1.6;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Un stand se opera a ciegas: el foco tiene que verse siempre. */
+:focus-visible{
+  outline:2px solid var(--vla);
+  outline-offset:3px;
+  border-radius:3px;
+}
+
+/* ───────── Barra superior ───────── */
+.bar{
+  position:fixed;top:0;left:0;right:0;z-index:30;
+  height:58px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 var(--borde-pantalla);
+  border-bottom:1px solid var(--filete-suave);
+  background:color-mix(in oklch,var(--tinta-0) 82%,transparent);
+}
+.bar[data-oculta]{opacity:0;pointer-events:none}
+.bar-marca{
+  background:none;border:0;cursor:pointer;color:var(--texto);
+  font-family:inherit;font-size:.86rem;font-weight:600;letter-spacing:-.01em;
+  display:flex;align-items:center;gap:var(--e-2);
+}
+.bar-marca i{
+  font-style:normal;font-size:.66rem;font-weight:650;letter-spacing:.12em;
+  color:var(--vla);border:1px solid color-mix(in srgb,var(--vla) 40%,transparent);
+  border-radius:3px;padding:1px 5px;
+}
+.bar-nav{
+  display:flex;align-items:center;gap:var(--e-4);
+  font-size:var(--t-meta);font-weight:550;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--texto-3);
+}
+.bar-nav b{color:var(--texto);font-weight:600}
+
+/* ───────── Pantallas ───────── */
+.pantalla{
+  position:fixed;inset:58px 0 0 0;
+  display:none;
+  padding:var(--borde-pantalla);
+}
+.pantalla.es-activa{display:block}
+.pantalla-carrera{inset:0;padding:0}
+
+.bloque{position:absolute;left:var(--borde-pantalla);max-width:min(58ch,52vw)}
+.bloque-abajo{bottom:var(--borde-pantalla)}
+.bloque-arriba{top:var(--borde-pantalla);right:var(--borde-pantalla);max-width:none}
+
+/* Coreografía de entrada: un escalonado por pantalla, nada suelto */
+.es-activa .bloque>*,
+.es-activa .ficha>*,
+.es-activa .acta-cuerpo>*{animation:subir .42s var(--curva) both}
+.es-activa .bloque>*:nth-child(2),.es-activa .ficha>*:nth-child(2),.es-activa .acta-cuerpo>*:nth-child(2){animation-delay:.06s}
+.es-activa .bloque>*:nth-child(3),.es-activa .ficha>*:nth-child(3),.es-activa .acta-cuerpo>*:nth-child(3){animation-delay:.12s}
+.es-activa .bloque>*:nth-child(4),.es-activa .ficha>*:nth-child(4),.es-activa .acta-cuerpo>*:nth-child(4){animation-delay:.18s}
+.es-activa .bloque>*:nth-child(5),.es-activa .ficha>*:nth-child(5),.es-activa .acta-cuerpo>*:nth-child(5){animation-delay:.24s}
+.es-activa .bloque>*:nth-child(6),.es-activa .ficha>*:nth-child(6){animation-delay:.30s}
+@keyframes subir{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ───────── Tipografía ───────── */
+.kicker{
+  font-size:var(--t-meta);font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--texto-3);margin-bottom:var(--e-4);
+}
+.hero-titulo{
+  font-size:var(--t-hero);font-weight:700;letter-spacing:-.045em;
+  line-height:.9;color:var(--texto);
+}
+.titulo{
+  font-size:var(--t-titulo);font-weight:650;letter-spacing:-.035em;
+  line-height:1;color:var(--texto);
+}
+.titulo-sm{font-size:var(--t-titulo-sm)}
+em{font-style:normal;color:var(--vla)}
+.sub{
+  font-size:var(--t-sub);font-weight:400;letter-spacing:-.011em;
+  color:var(--texto);line-height:1.42;margin-top:var(--e-4);max-width:46ch;
+}
+.nota{font-size:var(--t-cuerpo);color:var(--texto-3);margin-top:var(--e-3);max-width:48ch;line-height:1.62}
+.pie{
+  position:absolute;right:var(--borde-pantalla);bottom:var(--borde-pantalla);
+  font-size:var(--t-meta);letter-spacing:.08em;text-transform:uppercase;color:var(--texto-3);
+}
+
+/* ───────── Acciones ───────── */
+.acciones{display:flex;align-items:center;gap:var(--e-4);margin-top:var(--e-5);flex-wrap:wrap}
+.accion{
+  font-family:inherit;font-size:1.05rem;font-weight:600;letter-spacing:-.01em;
+  background:var(--vla);color:var(--sobre-vla);border:0;border-radius:999px;
+  padding:.86rem 2rem;cursor:pointer;
+  transition:transform .2s var(--curva),opacity .2s var(--curva);
+}
+.accion:hover{transform:translateY(-1px);opacity:.92}
+.accion:active{transform:translateY(0)}
+.accion kbd{
+  font-family:inherit;font-weight:700;font-size:.8em;opacity:.65;
+  margin-left:.6em;letter-spacing:.06em;
+}
+.enlace{
+  font-family:inherit;font-size:1rem;font-weight:500;
+  background:none;border:0;cursor:pointer;color:var(--vla);
+  padding:.35rem 0;transition:opacity .2s var(--curva);
+}
+.enlace::after{content:" ›";opacity:.6}
+.enlace:hover{opacity:.7}
+/* Con padding suficiente: en una feria se toca con prisa y de lado */
+.enlace-mini{
+  font-size:var(--t-meta);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--texto-3);padding:.55rem 0;
+}
+.enlace-mini::after{content:none}
+.enlace-mini:hover{color:var(--texto)}
+.enlace-riesgo{color:var(--alarma)}
+
+/* ───────── Inicio ───────── */
+#p-home{padding:0}
+.hero-lienzo{
+  position:absolute;inset:0;width:100%;height:100%;
+  display:block;pointer-events:none;
+}
+/* Lo que necesita saber quien pasa por el pasillo, no lo que ya sabe */
+.hero-datos{
+  display:flex;gap:var(--e-4);flex-wrap:wrap;margin-top:var(--e-4);
+  font-size:var(--t-meta);letter-spacing:.08em;text-transform:uppercase;color:var(--texto-3);
+}
+.hero-datos span{display:flex;align-items:center;gap:var(--e-2)}
+.hero-datos span::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--vla)}
+
+/* ───────── Listas de filas (carreras, jinetes, acta, ranking) ───────── */
+.lista{list-style:none;border-top:1px solid var(--filete)}
+
+/* Elección de carrera */
+.carrera{
+  display:grid;grid-template-columns:1fr auto auto;align-items:center;
+  gap:var(--e-4);width:100%;text-align:left;font-family:inherit;
+  background:none;border:0;border-bottom:1px solid var(--filete-suave);
+  padding:var(--e-4) var(--e-2);cursor:pointer;
+  transition:background .2s var(--curva),padding-left .2s var(--curva);
+}
+.carrera:hover{background:var(--tinta-1);padding-left:var(--e-4)}
+.carrera-nombre{
+  font-size:clamp(1.4rem,2.2vw,2rem);font-weight:650;letter-spacing:-.03em;
+  color:var(--texto);line-height:1.1;
+}
+.carrera:hover .carrera-nombre{color:var(--vla)}
+.carrera-sub{font-size:var(--t-cuerpo);color:var(--texto-3);margin-top:var(--e-1);max-width:52ch}
+.carrera-dato{
+  font-size:var(--t-meta);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--texto-3);text-align:right;white-space:nowrap;
+}
+.carrera canvas{display:block;width:150px;height:46px}
+
+/* ───────── Cuántos jinetes ───────── */
+.cifras{display:flex;margin-top:var(--e-5);border-top:1px solid var(--filete)}
+.cifra{
+  flex:0 0 auto;min-width:clamp(88px,9vw,132px);
+  background:none;border:0;border-bottom:1px solid var(--filete);
+  border-right:1px solid var(--filete-suave);
+  padding:var(--e-4) var(--e-3) var(--e-3);cursor:pointer;text-align:left;
+  font-family:inherit;transition:background .2s var(--curva);
+}
+.cifra:first-child{border-left:1px solid var(--filete-suave)}
+.cifra:hover{background:var(--tinta-1)}
+.cifra b{
+  display:block;font-size:clamp(2.4rem,3.6vw,3.4rem);font-weight:600;
+  letter-spacing:-.04em;line-height:1;color:var(--texto);
+}
+.cifra:hover b{color:var(--vla)}
+.cifra span{
+  display:block;margin-top:var(--e-2);
+  font-size:var(--t-meta);letter-spacing:.09em;text-transform:uppercase;color:var(--texto-3);
+}
+
+/* ───────── Sala de celulares ───────── */
+.lobby{
+  height:100%;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(280px,.8fr);
+  gap:clamp(24px,3.4vw,64px);align-items:center;
+}
+.lobby-cuerpo{min-width:0}
+.lobby-pasos{
+  list-style:none;counter-reset:paso;margin-top:var(--e-4);
+  border-top:1px solid var(--filete);
+}
+.lobby-pasos li{
+  counter-increment:paso;display:flex;gap:var(--e-3);align-items:baseline;
+  padding:var(--e-3) 0;border-bottom:1px solid var(--filete-suave);
+  font-size:var(--t-cuerpo);color:var(--texto-2);
+}
+.lobby-pasos li::before{
+  content:counter(paso);font-size:1.1rem;font-weight:700;color:var(--vla);min-width:1.4rem;
+}
+.lobby-url{
+  margin-top:var(--e-4);font-size:clamp(1.1rem,1.8vw,1.5rem);font-weight:600;
+  letter-spacing:-.02em;color:var(--texto);word-break:break-all;
+}
+.lobby-codigo{
+  margin-top:var(--e-2);font-size:var(--t-meta);letter-spacing:.09em;
+  text-transform:uppercase;color:var(--texto-3);
+}
+.lobby-codigo b{
+  font-size:1.6rem;letter-spacing:.24em;color:var(--vla);margin-left:var(--e-2);
+}
+.lobby-qr{display:flex;flex-direction:column;align-items:center;gap:var(--e-4)}
+#qr{
+  width:clamp(180px,20vw,280px);height:auto;display:block;
+  border:8px solid #F2F6F2;border-radius:4px;background:#F2F6F2;
+}
+.lobby-jinetes{list-style:none;width:100%;border-top:1px solid var(--filete)}
+.lobby-jinete{
+  display:grid;grid-template-columns:1.4rem auto 1fr auto;align-items:center;gap:var(--e-3);
+  padding:var(--e-2) 0;border-bottom:1px solid var(--filete-suave);
+}
+.lobby-jinete canvas{display:block;width:54px;height:36px}
+.lobby-jinete b{font-size:1rem;font-weight:600;color:var(--texto);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lobby-jinete .lj-num{font-size:1.1rem;font-weight:700;color:var(--carril)}
+.lobby-jinete .lj-estado{font-size:var(--t-meta);letter-spacing:.08em;text-transform:uppercase;color:var(--texto-3)}
+.lobby-jinete[data-listo] .lj-estado{color:var(--vla)}
+.lobby-vacio{padding:var(--e-4) 0;color:var(--texto-3);font-size:var(--t-cuerpo)}
+
+/* ───────── Registro y dibujo ───────── */
+.enroll{
+  height:100%;display:grid;
+  grid-template-columns:minmax(0,1fr) clamp(300px,26vw,400px);
+  gap:clamp(24px,3.4vw,64px);align-items:center;
+}
+.tablero{display:flex;flex-direction:column;gap:var(--e-3);min-width:0}
+.tablero-marco{
+  position:relative;border:1px solid var(--filete);border-radius:2px;
+  background:var(--tinta-1);overflow:hidden;
+}
+/* clamp y no min(): con un suelo, el tablero nunca colapsa a cero alto */
+#pad{display:block;width:100%;height:clamp(260px,50vh,540px);touch-action:none;cursor:crosshair}
+.tablero-vacio{
+  position:absolute;inset:0;display:flex;flex-direction:column;gap:var(--e-2);
+  align-items:center;justify-content:center;text-align:center;
+  pointer-events:none;transition:opacity .3s var(--curva);padding:var(--e-4);
+}
+.tablero-vacio b{
+  font-size:var(--t-sub);font-weight:500;letter-spacing:-.011em;color:var(--texto-2);
+}
+/* La frase que quita la vergüenza va donde se mira, no en el manual */
+.tablero-vacio span{font-size:var(--t-cuerpo);color:var(--vla)}
+.tablero-vacio[data-oculto]{opacity:0}
+.tablero-rumbo{
+  position:absolute;right:var(--e-3);top:var(--e-3);
+  font-size:var(--t-meta);letter-spacing:.09em;text-transform:uppercase;color:var(--texto-2);
+}
+.tablero-rumbo::after{content:" →";color:var(--vla)}
+.tablero-barra{display:flex;align-items:center;justify-content:space-between;gap:var(--e-4);flex-wrap:wrap}
+.tablero-btns{display:flex;gap:var(--e-4);align-items:center}
+
+/* Tira de los que ya se inscribieron: prueba de que se guardó,
+   entretenimiento para el que espera y recordatorio de teclas. */
+.inscritos{display:flex;gap:var(--e-4);min-height:74px;align-items:flex-end}
+.inscrito{display:flex;flex-direction:column;gap:2px;opacity:0;animation:subir .4s var(--curva) forwards}
+.inscrito canvas{display:block;width:78px;height:46px}
+.inscrito b{font-size:.82rem;font-weight:600;color:var(--texto);letter-spacing:-.015em}
+.inscrito span{font-size:var(--t-meta);color:var(--texto-3)}
+.inscritos-vacio{font-size:var(--t-meta);letter-spacing:.08em;text-transform:uppercase;color:var(--texto-3)}
+
+.ficha{display:flex;flex-direction:column}
+/* Por qué se piden los datos, antes de pedirlos. Un dato que se da a
+   cambio de algo se da sin problema; uno que se cobra como peaje, no. */
+.ficha-motivo{
+  margin-top:var(--e-4);font-size:var(--t-cuerpo);line-height:1.55;color:var(--texto-2);
+  border-left:0;padding-top:var(--e-3);border-top:1px solid var(--filete-suave);
+}
+.ficha-motivo b{color:var(--vla);font-weight:600}
+.campo{display:block;margin-top:var(--e-4)}
+.campo>span{
+  display:block;font-size:var(--t-meta);font-weight:550;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--texto-3);margin-bottom:var(--e-2);
+}
+.campo>span i{font-style:normal;color:var(--vla);letter-spacing:.09em}
+.campo input{
+  width:100%;background:none;border:0;border-bottom:1px solid var(--filete);
+  padding:var(--e-2) 0;color:var(--texto);font-family:inherit;
+  font-size:1.18rem;font-weight:450;letter-spacing:-.015em;outline:none;
+  transition:border-color .2s var(--curva);
+}
+.campo input:focus{border-bottom-color:var(--vla)}
+.campo input:focus-visible{outline:none}
+.campo input::placeholder{color:var(--apagado)}
+.permiso{
+  display:flex;gap:var(--e-3);margin-top:var(--e-4);cursor:pointer;
+  font-size:.82rem;line-height:1.55;color:var(--texto-3);
+}
+.permiso input{accent-color:var(--vla);width:16px;height:16px;flex:0 0 auto;margin-top:3px;cursor:pointer}
+.aviso{min-height:1.4rem;margin-top:var(--e-3);font-size:.88rem;color:var(--alarma)}
+
+/* ───────── Parrilla ───────── */
+.parrilla{
+  position:absolute;top:var(--borde-pantalla);left:var(--borde-pantalla);right:var(--borde-pantalla);
+  display:flex;border-top:1px solid var(--filete);
+}
+.puesto{
+  flex:1 1 0;min-width:0;padding:var(--e-3) var(--e-3) var(--e-4);
+  border-bottom:1px solid var(--filete);border-right:1px solid var(--filete-suave);
+}
+.puesto:first-child{border-left:1px solid var(--filete-suave)}
+.puesto canvas{width:100%;height:clamp(78px,12vh,132px);display:block}
+/* La tecla es el dato operativo: manda ella, no el nombre. */
+.puesto-tecla{
+  display:block;margin-top:var(--e-2);
+  font-family:inherit;font-size:clamp(2.6rem,4vw,3.8rem);font-weight:700;
+  letter-spacing:-.04em;line-height:1;color:var(--carril);
+}
+.puesto-nombre{
+  margin-top:var(--e-1);font-size:1.02rem;font-weight:550;letter-spacing:-.018em;
+  color:var(--texto);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.puesto-rol{
+  font-size:var(--t-meta);letter-spacing:.09em;text-transform:uppercase;color:var(--texto-3);
+}
+.puesto-tecla-trio{display:flex;flex-direction:column;align-items:flex-start;gap:1px;line-height:1}
+.pt-arriba,.pt-abajo{
+  font-size:clamp(.85rem,1.1vw,1.05rem);font-weight:600;letter-spacing:.02em;color:var(--texto-3);
+}
+.pt-correr{font-size:clamp(2.1rem,3.2vw,3rem);font-weight:700;letter-spacing:-.04em;color:var(--carril)}
+.puesto[data-cpu] .puesto-tecla{font-size:clamp(1.1rem,1.6vw,1.5rem);color:var(--texto-3)}
+.puesto[data-cpu]{opacity:.55}
+
+/* ───────── Carrera ───────── */
+#track{position:absolute;inset:0;width:100%;height:100%;display:block}
+.cronometro{
+  position:absolute;top:clamp(20px,3vh,38px);left:50%;transform:translateX(-50%);
+  display:flex;align-items:baseline;gap:.18em;pointer-events:none;
+  font-size:clamp(2.6rem,5.4vw,5rem);font-weight:600;font-stretch:80%;
+  letter-spacing:-.045em;line-height:1;color:var(--texto);
+}
+.cronometro i{font-style:normal;font-size:.3em;font-weight:550;color:var(--texto-3);letter-spacing:.06em}
+/* display:flex es obligatorio: sin él, el `order` que reordena las
+   posiciones no hace nada y el líder puede salir el último de la lista. */
+.tabla-viva{
+  position:absolute;right:clamp(20px,3vw,48px);top:50%;transform:translateY(-50%);
+  width:clamp(240px,22vw,340px);pointer-events:none;
+  display:flex;flex-direction:column;
+  border-top:1px solid var(--filete);
+}
+.viva{
+  display:grid;grid-template-columns:1.6rem 2.1rem 1fr auto;align-items:baseline;
+  gap:var(--e-2) var(--e-3);padding:var(--e-3) 0 calc(var(--e-3) - 2px);
+  border-bottom:1px solid var(--filete-suave);position:relative;
+}
+.viva-pos{font-size:1.3rem;font-weight:600;letter-spacing:-.03em;color:var(--texto-3)}
+.viva-tecla{
+  font-size:1.3rem;font-weight:700;letter-spacing:-.02em;color:var(--carril);
+  text-align:center;
+}
+.viva-nombre{
+  font-size:1.05rem;font-weight:550;letter-spacing:-.018em;color:var(--texto);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.viva-dato{font-size:.95rem;font-weight:450;color:var(--texto-3)}
+/* Qué botón toca ahora: ocupa su propia fila para que no empuje nada */
+.viva-aviso{
+  grid-column:2 / -1;font-size:1.05rem;font-weight:700;letter-spacing:.02em;
+  color:var(--carril);opacity:0;transition:opacity .12s linear;min-height:1.2em;
+}
+.viva-aviso[data-on]{opacity:.45}
+.viva-aviso[data-ya]{opacity:1;text-shadow:0 0 14px var(--carril)}
+/* La barra de ritmo es medida, no adorno: mide el impulso vivo del jinete */
+.viva-ritmo{
+  position:absolute;left:0;bottom:-1px;height:2px;width:0;
+  background:var(--carril);transition:width .12s linear;
+}
+.viva[data-lider] .viva-pos{color:var(--vla)}
+.viva[data-cpu]{opacity:.62}
+.viva[data-tropieza] .viva-dato{color:var(--alarma)}
+.salida{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:var(--e-4);pointer-events:none;
+}
+.salida[hidden]{display:none}
+.salida b{
+  font-size:min(26vw,260px);font-weight:700;font-stretch:78%;letter-spacing:-.06em;
+  line-height:1;color:var(--texto);
+}
+.salida[data-ya] b{color:var(--vla)}
+/* Última oportunidad de recordar qué tecla es la de cada quien */
+.salida-teclas{display:flex;gap:var(--e-5);flex-wrap:wrap;justify-content:center}
+.salida-tecla{display:flex;flex-direction:column;align-items:center;gap:2px}
+.salida-tecla b{font-size:clamp(2rem,3.4vw,3rem);color:var(--carril);letter-spacing:-.03em}
+.salida-tecla i{font-style:normal;font-size:clamp(.85rem,1.1vw,1.05rem);font-weight:600;color:var(--texto-3)}
+.salida-tecla span{font-size:var(--t-meta);letter-spacing:.09em;text-transform:uppercase;color:var(--texto-3)}
+/* Tira de perfil: el terreno, las vallas y dónde va cada quien. En un
+   plano isométrico una loma suave casi no se lee, y quien se queda atrás
+   se sale del cuadro. Esto resuelve las dos cosas con un dato, no con una
+   ilusión, que además es el lenguaje del resto de la interfaz. */
+.perfil{
+  position:absolute;left:clamp(20px,3vw,48px);bottom:clamp(46px,7vh,76px);
+  width:min(46vw,620px);height:62px;display:block;pointer-events:none;
+}
+.recordatorio{
+  position:absolute;left:50%;bottom:clamp(18px,3vh,34px);transform:translateX(-50%);
+  font-size:var(--t-meta);letter-spacing:.09em;text-transform:uppercase;
+  color:var(--texto-3);pointer-events:none;text-align:center;
+}
+
+/* ───────── Acta ───────── */
+.acta{
+  height:100%;display:grid;
+  grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);
+  gap:clamp(24px,3.4vw,64px);align-items:stretch;
+}
+/* La tabla es lo único que cede: «Otra carrera» tiene que estar siempre
+   a la vista, o en un stand la gente se queda mirando sin saber seguir. */
+.acta-cuerpo{
+  min-width:0;min-height:0;height:100%;
+  display:flex;flex-direction:column;justify-content:center;padding-right:var(--e-3);
+}
+.acta-cuerpo>.tabla{flex:1 1 auto;min-height:0;overflow-y:auto}
+.acta-cuerpo>.acciones{flex:0 0 auto}
+/* El puesto es el dato que la persona busca primero, y se ve de lejos */
+.acta-puesto{
+  font-size:clamp(3.4rem,6.5vw,7rem);font-weight:700;letter-spacing:-.05em;
+  line-height:.86;margin-top:var(--e-2);
+}
+
+/* Tablero histórico: contra quién se midió y a quién puede retar */
+.tablero-historico{
+  min-width:0;align-self:stretch;display:flex;flex-direction:column;
+  justify-content:center;padding-left:clamp(16px,2vw,36px);
+  border-left:1px solid var(--filete-suave);
+}
+.panel-titulo{
+  font-size:clamp(1.3rem,1.9vw,1.8rem);font-weight:650;letter-spacing:-.03em;color:var(--texto);
+}
+.panel-sub{
+  font-size:var(--t-meta);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--texto-3);margin-top:var(--e-2);
+}
+.tabla-historico{max-height:52vh;overflow-y:auto;margin-top:var(--e-3);scrollbar-width:thin;scrollbar-color:var(--filete) transparent}
+.acta-cuerpo,.tabla-ranking{scrollbar-width:thin;scrollbar-color:var(--filete) transparent}
+.fila-historico{grid-template-columns:2rem auto 1fr auto;padding:var(--e-2) 0}
+.fila-historico canvas{width:60px;height:41px}
+.fila-historico .fila-nombre{font-size:1rem}
+.fila-historico .fila-tiempo{font-size:1rem}
+.fila-historico[data-propia]{background:rgba(0,230,118,.07)}
+
+/* Lámina a pantalla completa, para la foto */
+.capa-lamina .lamina-caja{
+  display:flex;flex-direction:column;align-items:center;gap:var(--e-3);
+  max-height:100%;
+}
+.capa-lamina #poster{
+  max-height:74vh;width:auto;max-width:100%;
+  border:1px solid var(--filete);display:block;
+}
+/* El único sitio donde la marca puede decir algo, porque es la pantalla
+   que la gente mira más rato y con la que se hace la foto. */
+.acta-vla{
+  margin-top:var(--e-4);padding-top:var(--e-3);border-top:1px solid var(--filete);
+  font-size:var(--t-cuerpo);color:var(--texto-2);max-width:54ch;line-height:1.55;
+}
+.acta-vla b{color:var(--vla);font-weight:600}
+
+.acta-marca{font-size:var(--t-cuerpo);color:var(--texto-3)}
+.tabla{list-style:none;margin-top:var(--e-3);border-top:1px solid var(--filete)}
+.fila{
+  display:grid;grid-template-columns:2.2rem auto 1fr auto;
+  align-items:center;gap:var(--e-3);
+  padding:var(--e-2) 0;border-bottom:1px solid var(--filete-suave);
+}
+.fila-pos{font-size:1.5rem;font-weight:600;letter-spacing:-.03em;color:var(--texto-3)}
+.fila[data-gana] .fila-pos{color:var(--vla)}
+.fila[data-cpu]{opacity:.62}
+.fila canvas{display:block;width:76px;height:52px}
+.fila-cuerpo{min-width:0;display:flex;flex-direction:column;gap:2px}
+.fila-nombre{
+  font-size:1.22rem;font-weight:600;letter-spacing:-.025em;color:var(--texto);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.fila-meta{font-size:var(--t-meta);letter-spacing:.08em;text-transform:uppercase;color:var(--texto-3)}
+.fila-tiempo{font-size:1.22rem;font-weight:600;letter-spacing:-.02em;color:var(--texto)}
+.fila[data-gana] .fila-tiempo{color:var(--vla)}
+.tabla-ranking{max-height:56vh;overflow-y:auto;margin-top:var(--e-4)}
+.tabla-vacia{padding:var(--e-4) 0;color:var(--texto-3);border-bottom:1px solid var(--filete-suave)}
+
+/* Pestañas de carrera del ranking */
+.pestanas{display:flex;gap:var(--e-5);margin-top:var(--e-4)}
+.pestana{
+  background:none;border:0;padding:var(--e-2) 0;cursor:pointer;font-family:inherit;
+  font-size:var(--t-meta);letter-spacing:.09em;text-transform:uppercase;
+  color:var(--texto-3);border-bottom:2px solid transparent;transition:.2s var(--curva);
+}
+.pestana:hover{color:var(--texto)}
+.pestana[data-on]{color:var(--vla);border-bottom-color:var(--vla)}
+
+/* ───────── Capas ───────── */
+.capa{
+  position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+  background:color-mix(in oklch,var(--tinta-0) 86%,transparent);padding:var(--e-4);
+}
+.capa[hidden]{display:none}
+.capa-caja{
+  width:100%;max-width:460px;background:var(--tinta-1);
+  border:1px solid var(--filete);padding:var(--e-5);
+}
+.teclas{margin:var(--e-5) 0 0;border-top:1px solid var(--filete)}
+.tecla{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--e-3);
+  width:100%;border-bottom:1px solid var(--filete-suave);padding:var(--e-3) 0;
+}
+.tecla b{font-size:1rem;font-weight:500;color:var(--texto);white-space:nowrap}
+.tecla-grupo{display:flex;gap:var(--e-2)}
+.ranura{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:0;cursor:pointer;font-family:inherit;padding:2px;
+}
+.ranura kbd{
+  font-family:inherit;font-size:1.15rem;font-weight:700;color:var(--carril);
+  border:1px solid var(--filete);border-radius:3px;padding:2px 10px;min-width:2.5rem;text-align:center;
+  transition:.15s var(--curva);
+}
+.ranura span{font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--texto-3)}
+.ranura:hover kbd{border-color:var(--texto-3)}
+.ranura[data-escucha] kbd{border-color:var(--vla);color:var(--vla)}
+
+/* ───────── Responsivo ───────── */
+@media (max-width:1100px){
+  .lobby{grid-template-columns:1fr;height:auto;align-content:start}
+  .enroll,.acta{grid-template-columns:1fr;align-content:start;overflow-y:auto;height:auto;padding-bottom:var(--e-6)}
+  .tablero-historico{border-left:0;padding-left:0;border-top:1px solid var(--filete-suave);padding-top:var(--e-4)}
+  .bloque{position:static;max-width:none;margin-top:var(--e-5)}
+  .pantalla{overflow-y:auto}
+  #p-grid .parrilla{position:static}
+  .tabla-viva{position:static;transform:none;width:auto;margin:auto var(--e-4) var(--e-4)}
+  .perfil{position:static;width:auto;margin:0 var(--e-4)}
+  .pantalla-carrera.es-activa{display:flex;flex-direction:column}
+  #track{position:relative;flex:1;inset:auto;min-height:44vh}
+  .carrera{grid-template-columns:1fr auto}
+  .carrera canvas{display:none}
+}
+@media (max-width:640px){
+  .parrilla{flex-wrap:wrap}
+  .puesto{flex:1 1 44%}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}

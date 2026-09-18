@@ -1,0 +1,167 @@
+/* ═══════════════════════════════════════════════════
+   EL MANDO — la pantalla que va en el celular
+   ═══════════════════════════════════════════════════
+   Hereda los tokens de style.css. Todo lo de aquí está pensado para
+   un pulgar, de pie, con prisa: objetivos enormes, cero scroll durante
+   la carrera y nada que se pueda tocar por error.
+*/
+
+body.mando{
+  overflow:hidden;
+  overscroll-behavior:none;
+  touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+}
+
+.m-pantalla{
+  position:fixed;inset:0;display:none;flex-direction:column;
+  padding:max(14px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));
+}
+.m-pantalla.es-activa{display:flex}
+
+.m-cabecera{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-bottom:12px;border-bottom:1px solid var(--filete-suave);flex:0 0 auto;
+}
+.m-marca{
+  display:flex;align-items:center;gap:8px;
+  font-size:.86rem;font-weight:600;letter-spacing:-.01em;color:var(--texto);
+}
+.m-marca i{
+  font-style:normal;font-size:.66rem;font-weight:650;letter-spacing:.12em;
+  color:var(--carril,var(--vla));
+  border:1px solid color-mix(in srgb,var(--carril,#00E676) 45%,transparent);
+  border-radius:3px;padding:1px 6px;
+}
+.m-dato{font-size:var(--t-meta);letter-spacing:.08em;text-transform:uppercase;color:var(--texto-3)}
+
+.m-cuerpo{flex:1 1 auto;overflow-y:auto;display:flex;flex-direction:column;padding-top:20px}
+.m-centro{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+
+.m-titulo{font-size:clamp(2rem,10vw,2.8rem);font-weight:700;letter-spacing:-.04em;line-height:.95;color:var(--texto)}
+.m-sub{font-size:1.05rem;color:var(--texto-2);line-height:1.45;max-width:30ch}
+.m-motivo{
+  margin-top:14px;padding-top:12px;border-top:1px solid var(--filete-suave);
+  font-size:.92rem;line-height:1.5;color:var(--texto-2);
+}
+.m-motivo b{color:var(--vla);font-weight:600}
+
+/* ───────── Formulario ───────── */
+.m-campo{display:block;margin-top:18px}
+.m-campo>span{
+  display:block;font-size:var(--t-meta);font-weight:550;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--texto-3);margin-bottom:6px;
+}
+.m-campo>span i{font-style:normal;color:var(--vla)}
+.m-campo input{
+  width:100%;background:none;border:0;border-bottom:1px solid var(--filete);
+  padding:10px 0;color:var(--texto);font-family:inherit;
+  font-size:1.15rem;font-weight:450;letter-spacing:-.015em;outline:none;
+  border-radius:0;                     /* iOS redondea los input por su cuenta */
+  transition:border-color .2s var(--curva);
+}
+.m-campo input:focus{border-bottom-color:var(--vla)}
+.m-campo input::placeholder{color:var(--apagado)}
+.m-sala-input{
+  font-size:2.2rem!important;font-weight:700!important;letter-spacing:.18em!important;
+  text-transform:uppercase;text-align:center;
+}
+.m-permiso{
+  display:flex;gap:12px;margin-top:18px;font-size:.82rem;line-height:1.5;color:var(--texto-3);
+}
+.m-permiso input{accent-color:var(--vla);width:20px;height:20px;flex:0 0 auto;margin-top:2px}
+.m-aviso{min-height:1.3rem;margin-top:12px;font-size:.88rem;color:var(--alarma)}
+
+.m-accion{
+  flex:0 0 auto;width:100%;margin-top:16px;
+  font-family:inherit;font-size:1.1rem;font-weight:700;letter-spacing:-.01em;
+  background:var(--vla);color:var(--sobre-vla);border:0;border-radius:999px;
+  padding:18px 24px;cursor:pointer;
+}
+.m-accion:active{opacity:.85}
+.m-accion[disabled]{background:var(--filete);color:var(--texto-3)}
+
+/* ───────── Tablero ───────── */
+.m-pad-zona{flex:1 1 auto;min-height:0;display:flex;padding:12px 0}
+.m-pad-marco{
+  position:relative;flex:1;border:1px solid var(--filete);border-radius:3px;
+  background:var(--tinta-1);overflow:hidden;
+}
+#m-pad{display:block;width:100%;height:100%;touch-action:none}
+.m-pad-vacio{
+  position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;
+  align-items:center;justify-content:center;text-align:center;pointer-events:none;
+  transition:opacity .3s var(--curva);padding:20px;
+}
+.m-pad-vacio b{font-size:1.1rem;font-weight:500;color:var(--texto-2)}
+.m-pad-vacio span{font-size:.9rem;color:var(--vla)}
+.m-pad-vacio[data-oculto]{opacity:0}
+.m-rumbo{
+  position:absolute;right:10px;top:10px;
+  font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--texto-3);
+}
+.m-barra{display:flex;gap:8px;flex:0 0 auto}
+.m-chico{
+  flex:1;font-family:inherit;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;
+  font-weight:600;background:none;color:var(--texto-3);
+  border:1px solid var(--filete);border-radius:999px;padding:12px 6px;
+}
+.m-chico:active{color:var(--texto);border-color:var(--texto-3)}
+
+.m-mini{width:180px;height:120px;display:block}
+
+/* ───────── Mando de carrera ───────── */
+/* Tres franjas a pantalla completa. Arriba se salta, en medio se corre,
+   abajo se agacha: la misma disposición que las teclas de la mesa, para
+   que quien mire la pantalla grande entienda al otro. */
+.m-pantalla-juego{padding:0;display:none}
+.m-pantalla-juego.es-activa{display:grid;grid-template-rows:auto 1fr 2.1fr 1fr auto;gap:6px;padding:8px}
+.m-marcador{
+  display:flex;align-items:baseline;justify-content:center;gap:12px;
+  padding:max(6px,env(safe-area-inset-top)) 0 2px;
+}
+.m-puesto{font-size:2.4rem;font-weight:700;letter-spacing:-.04em;color:var(--carril,var(--vla));line-height:1}
+.m-metros{font-size:1rem;color:var(--texto-3);font-variant-numeric:tabular-nums}
+
+.m-boton{
+  font-family:inherit;border:0;border-radius:18px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-weight:700;letter-spacing:-.01em;
+  -webkit-tap-highlight-color:transparent;
+}
+.m-boton i{font-style:normal;font-size:1.6em;line-height:1}
+.m-boton:active{transform:scale(.985)}
+.m-boton[disabled]{opacity:.28}
+
+.m-boton-correr{
+  background:var(--carril,var(--vla));color:var(--sobre-vla);
+  font-size:clamp(2rem,11vw,3.2rem);
+}
+.m-boton-correr:active{filter:brightness(1.12)}
+.m-boton-salto,.m-boton-agache{
+  background:var(--tinta-1);color:var(--texto);
+  border:1px solid var(--filete);font-size:clamp(.95rem,4.2vw,1.25rem);
+}
+/* Cuando toca, se enciende: es la única señal que el jinete no puede adivinar */
+.m-boton[data-ya]{
+  background:var(--carril,var(--vla));color:var(--sobre-vla);border-color:transparent;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--carril,#00E676) 35%,transparent);
+}
+.m-boton[data-pronto]{border-color:var(--carril,var(--vla));color:var(--carril,var(--vla))}
+.m-pista{
+  text-align:center;font-size:var(--t-meta);letter-spacing:.09em;
+  text-transform:uppercase;color:var(--texto-3);padding-bottom:max(4px,env(safe-area-inset-bottom));
+}
+
+/* ───────── Estado de conexión ───────── */
+.m-estado{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  background:var(--alarma);color:#1a0604;
+  font-size:.9rem;font-weight:600;text-align:center;
+}
+.m-estado[hidden]{display:none}
+
+@media (min-width:700px){
+  .m-cuerpo,.m-centro{max-width:520px;margin:0 auto;width:100%}
+}

@@ -1,0 +1,8 @@
+# El candado de integridad (verificar.js/blindaje.json) hashea los bytes
+# crudos de los archivos congelados/protegidos. Si git normaliza saltos de
+# línea al clonar (autocrlf en Windows), el hash cambia sin que nadie haya
+# tocado el contenido y dispara una alarma falsa de "versión modificada".
+# Forzar LF en todo el repo hace que el checkout sea idéntico en cualquier
+# sistema operativo.
+* text=auto eol=lf
+*.woff2 binary
