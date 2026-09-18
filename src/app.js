@@ -360,6 +360,9 @@ function pintarLobby() {
     $("#lobby-codigo").textContent = sala.codigo;
     lienzo.width = 560;
     pintarQR(lienzo, url);
+    $("#lobby-paso-red").textContent = sala.publico()
+      ? "Cualquier red sirve, no hace falta compartir WiFi"
+      : "Conéctese al WiFi del stand";
     if (sala.publico()) {
       aviso.textContent = "Funciona desde cualquier red — no hace falta compartir WiFi.";
     } else {
