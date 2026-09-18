@@ -47,6 +47,12 @@ function direccionesLan() {
   return salida.sort((a, b) => (b.startsWith("192.168.") ? 1 : 0) - (a.startsWith("192.168.") ? 1 : 0));
 }
 
+/* En un hosting con dominio público (Railway) las IPs de red del
+   contenedor son internas y un celular nunca las alcanza. Si existe
+   RAILWAY_PUBLIC_DOMAIN, esa es la única dirección real; si no, se sigue
+   usando la LAN del stand como siempre. */
+const DOMINIO_PUBLICO = process.env.RAILWAY_PUBLIC_DOMAIN || null;
+
 /* ───────── Salas ───────── */
 
 /** codigo → { mesa, mandos: Map(carril → conexion) } */
@@ -90,7 +96,7 @@ function manejarMensaje(con, texto) {
     salas.set(codigo, sala);
     con.papel = "mesa";
     con.sala = codigo;
-    enviar(con, { t: "sala", codigo, direcciones: direccionesLan(), puerto: PUERTO });
+    enviar(con, { t: "sala", codigo, direcciones: direccionesLan(), puerto: PUERTO, publico: DOMINIO_PUBLICO });
     // Si ya había mandos esperando, la mesa se entera de todos
     for (const [carril, mando] of sala.mandos) {
       aLaMesa(sala, { t: "jinete", carril, ...mando.ficha });
@@ -241,7 +247,7 @@ const servidor = http.createServer((req, res) => {
 
   if (url === "/api/red") {
     res.writeHead(200, { "Content-Type": TIPOS[".json"] });
-    res.end(JSON.stringify({ direcciones: direccionesLan(), puerto: PUERTO }));
+    res.end(JSON.stringify({ direcciones: direccionesLan(), puerto: PUERTO, publico: DOMINIO_PUBLICO }));
     return;
   }
 

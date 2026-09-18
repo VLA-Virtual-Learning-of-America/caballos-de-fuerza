@@ -360,10 +360,14 @@ function pintarLobby() {
     $("#lobby-codigo").textContent = sala.codigo;
     lienzo.width = 560;
     pintarQR(lienzo, url);
-    const otras = sala.direcciones().slice(1);
-    aviso.textContent = otras.length
-      ? `Si no entra, pruebe con otra red del equipo: ${otras.join(" · ")}`
-      : "Los celulares tienen que estar en la misma red que este equipo.";
+    if (sala.publico()) {
+      aviso.textContent = "Funciona desde cualquier red — no hace falta compartir WiFi.";
+    } else {
+      const otras = sala.direcciones().slice(1);
+      aviso.textContent = otras.length
+        ? `Si no entra, pruebe con otra red del equipo: ${otras.join(" · ")}`
+        : "Los celulares tienen que estar en la misma red que este equipo.";
+    }
   }
 
   const ol = $("#lobby-jinetes");

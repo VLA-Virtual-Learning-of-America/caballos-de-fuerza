@@ -26,7 +26,7 @@ export function crearSala(manejadores = {}) {
       let m; try { m = JSON.parse(e.data); } catch { return; }
       if (m.t === "sala") {
         codigo = m.codigo;
-        red = { direcciones: m.direcciones || [], puerto: m.puerto };
+        red = { direcciones: m.direcciones || [], puerto: m.puerto, publico: m.publico || null };
         manejadores.alEstado?.({ vivo: true, codigo, red });
         return;
       }
@@ -53,13 +53,18 @@ export function crearSala(manejadores = {}) {
   return {
     get vivo() { return vivo; },
     get codigo() { return codigo; },
-    /** La URL que va dentro del QR. */
+    /** La URL que va dentro del QR. Con dominio público (Railway) esa es
+        la única dirección real; si no, se usa la LAN del stand. */
     url() {
       const ip = red?.direcciones?.[0];
-      const base = ip ? `http://${ip}:${red.puerto}` : location.origin;
+      const base = red?.publico ? `https://${red.publico}`
+        : ip ? `http://${ip}:${red.puerto}` : location.origin;
       return `${base}/mando${codigo ? `?s=${codigo}` : ""}`;
     },
     direcciones: () => red?.direcciones || [],
+    /** true si hay dominio público (Railway): las direcciones de LAN
+        no sirven de nada y no hay que sugerirlas como alternativa. */
+    publico: () => red?.publico || null,
     /** Avisa a todos los mandos de en qué fase va la mesa. */
     fase(fase, curso) {
       enviar({ t: "fase", fase, curso: curso ? { id: curso.id, nombre: curso.nombre, obstaculos: !!curso.obstaculos } : null });
