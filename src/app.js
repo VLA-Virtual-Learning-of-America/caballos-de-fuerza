@@ -19,7 +19,10 @@ import * as almacen from "./store.js";
 import { pintarPoster } from "./poster.js";
 import { crearSala } from "./sala.js";
 import { pintarQR } from "./qr.js";
-import { STICKERS, stickerPorCodigo, etiquetaSticker, renderConStickers } from "./stickers.js";
+import { etiquetaSticker, renderConStickers } from "./stickers.js";
+
+import { CARRERAS, carreraPorId, NOTA_SALARIOS } from "./carreras.js";
+import { EVENTO, linkWhatsApp } from "./config.js";
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -27,6 +30,8 @@ const $$ = s => [...document.querySelectorAll(s)];
 const CARRILES = ["#00E676", "#FF6200", "#22D3EE", "#E879F9"];
 const NOMBRES_CPU = ["Relámpago", "Centella", "Tornado"];
 const INACTIVIDAD = 100000;   // ms sin tocar nada antes de volver a la portada
+
+const INACTIVIDAD_ACTA = 60000;
 
 const estado = {
   curso: CURSOS[0],
@@ -90,6 +95,9 @@ $$("[data-ir]").forEach(b => b.addEventListener("click", () => { pararCarrera();
 $("#bar-marca").addEventListener("click", () => { pararCarrera(); ir("home"); });
 
 /* ═════════ Inicio ═════════ */
+
+$("#ticker-mercado").textContent = CARRERAS.slice(0, 3)
+  .map(c => c.nombre.toUpperCase() + " · " + (c.salario || c.demanda) + (c.salario ? "/mes" : "")).join(" · ");
 
 const hero = crearHero($("#hero"), normalizar(caballoDeMuestra()));
 
@@ -202,18 +210,33 @@ const cifras = $("#cifras");
 
 const tablero = crearTablero($("#pad"), vacio => {
   $("#pad-vacio").toggleAttribute("data-oculto", !vacio);
-  $("#in-sticker").disabled = vacio;
 });
 
-const selectorSticker = $("#in-sticker");
-selectorSticker.add(new Option("Sin sticker", ""));
-STICKERS.forEach(s => selectorSticker.add(new Option(s.codigo + " · " + s.nombre, s.codigo)));
-function previsualizarSticker() {
-  $("#sticker-preview").replaceChildren();
-  const etiqueta = etiquetaSticker(selectorSticker.value);
-  if (etiqueta) $("#sticker-preview").append(etiqueta);
+const selectorCarrera = $("#in-carrera");
+selectorCarrera.add(new Option("Elegí tu carrera…", ""));
+CARRERAS.forEach(c => selectorCarrera.add(new Option(
+  c.nombre + " · " + c.cert + " · " + (c.salario || c.demanda) + (c.salario ? "/mes" : ""), c.id)));
+$("#carrera-ayuda").textContent = NOTA_SALARIOS;
+function previsualizarCarrera() {
+  $("#carrera-preview").replaceChildren();
+  const etiqueta = etiquetaSticker(carreraPorId(selectorCarrera.value)?.sticker);
+  if (etiqueta) $("#carrera-preview").append(etiqueta);
 }
-selectorSticker.addEventListener("change", previsualizarSticker);
+selectorCarrera.addEventListener("change", previsualizarCarrera);
+
+// La mesa continúa aunque falle la red; el lead también queda local.
+async function enviarEvento(ruta, datos) {
+  const control = new AbortController();
+  const timeout = setTimeout(() => control.abort(), 4000);
+  try {
+    const respuesta = await fetch(ruta, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datos), signal: control.signal
+    });
+    if (!respuesta.ok) throw new Error("HTTP " + respuesta.status);
+  } catch (error) { console.warn("No se pudo enviar " + ruta + ":", error); }
+  finally { clearTimeout(timeout); }
+}
 
 $("#btn-undo").addEventListener("click", () => tablero.deshacer());
 $("#btn-clear").addEventListener("click", () => tablero.limpiar());
@@ -267,8 +290,8 @@ function prepararFicha() {
   $("#in-consent").checked = false;
   $("#enroll-err").textContent = "";
   $("#btn-enroll-back").textContent = estado.idx === 0 ? "Volver" : "Atrás, corregir el anterior";
-  selectorSticker.value = "";
-  previsualizarSticker();
+  selectorCarrera.value = "";
+  previsualizarCarrera();
   tablero.limpiar();
   tablero.tinta = color;
   pintarInscritos();
@@ -287,8 +310,8 @@ $("#btn-enroll-back").addEventListener("click", () => {
   $("#in-phone").value = j.telefono || "";
   $("#in-email").value = j.correo || "";
   $("#in-consent").checked = !!j.consiente;
-  selectorSticker.value = j.sticker || "";
-  previsualizarSticker();
+  selectorCarrera.value = j.carrera || "";
+  previsualizarCarrera();
 });
 
 $("#ficha").addEventListener("submit", e => { e.preventDefault(); inscribir(); });
@@ -305,21 +328,24 @@ function inscribir() {
   const telefono = $("#in-phone").value.trim();
   const correo = $("#in-email").value.trim();
   const consiente = $("#in-consent").checked;
+  const carrera = selectorCarrera.value;
 
   if (estado.jinetes.length >= estado.total) return;   // no se pasa de la cuenta
   if (nombre.length < 2) { err.textContent = "Póngale un nombre al jinete."; $("#in-name").focus(); return; }
   if (!TELEFONO_OK(telefono)) { err.textContent = "Escriba un WhatsApp válido: hacen falta al menos ocho dígitos."; $("#in-phone").focus(); return; }
   if (!CORREO_OK(correo)) { err.textContent = "Escriba un correo válido, con arroba y dominio."; $("#in-email").focus(); return; }
   if (!consiente) { err.textContent = "Hay que marcar la autorización para poder correr."; return; }
-  if (tablero.vacio()) { err.textContent = "Falta el caballo. Dibuje algo o use «Présteme uno»."; return; }
+  if (!carreraPorId(carrera)) { err.textContent = "Elegí la carrera que va a correr."; selectorCarrera.focus(); return; }
+  if (tablero.vacio()) { err.textContent = "Falta el corredor. Dibuje algo o use «Présteme uno»."; return; }
   err.textContent = "";
 
   almacen.guardarLead({ nombre, telefono, correo, consiente });
+  void enviarEvento("/api/lead", { nombre, telefono, correo, consiente: true, carrera, voluntario: null, origen: "mesa" });
 
   const crudos = tablero.trazos();
   estado.jinetes.push({
     nombre, telefono, correo, consiente,
-    sticker: stickerPorCodigo(selectorSticker.value)?.codigo || null,
+    carrera, sticker: carreraPorId(carrera).sticker,
     color: CARRILES[estado.idx],
     dibujo: normalizar(crudos),
     trazosCrudos: crudos,
@@ -341,7 +367,7 @@ const sala = crearSala({
   alEstado: pintarLobby,
   alJinete(m) {
     const previo = estado.mandos.get(m.carril) || {};
-    estado.mandos.set(m.carril, { ...previo, nombre: m.nombre, telefono: m.telefono, correo: m.correo });
+    estado.mandos.set(m.carril, { ...previo, nombre: m.nombre, telefono: m.telefono, correo: m.correo, carrera: m.carrera, sticker: m.sticker, voluntario: m.voluntario });
     almacen.guardarLead({ nombre: m.nombre, telefono: m.telefono, correo: m.correo, consiente: true });
     pintarLobby();
   },
@@ -438,6 +464,7 @@ $("#btn-lobby-ir").addEventListener("click", () => {
   if (!conDibujo.length) return;
   estado.jinetes = conDibujo.map(([carril, j], i) => ({
     nombre: j.nombre,
+    sticker: j.sticker, carrera: j.carrera, telefono: j.telefono, correo: j.correo, voluntario: j.voluntario,
     color: CARRILES[i],
     dibujo: j.dibujo,
     trazosCrudos: j.trazosCrudos,
@@ -563,9 +590,12 @@ let ultimoCuadro = 0, ultimoHUD = 0, mapaTeclas = new Map(), mapaMandos = new Ma
 
 function arrancar() {
   const lista = corredores();
-  estado.carrera = crearCarrera(lista.map(({ sticker, ...r }) => r), estado.curso);
-  // Metadato visual; el motor no lo recibe ni lo utiliza.
-  estado.carrera.corredores.forEach((r, i) => { r.sticker = lista[i].sticker || null; });
+  estado.carrera = crearCarrera(lista.map(({ sticker, carrera, telefono, correo, voluntario, carrilMando, ...r }) => r), estado.curso);
+  // Metadatos de presentación y contacto: se agregan después del motor.
+  estado.carrera.corredores.forEach((r, i) => {
+    for (const campo of ["sticker", "carrera", "telefono", "correo", "voluntario", "carrilMando"])
+      r[campo] = lista[i][campo] ?? null;
+  });
 
   mapaTeclas = new Map();
   mapaMandos = new Map();
@@ -818,7 +848,7 @@ function mostrarActa(c) {
   $("#acta-puesto").style.color = yo ? yo.color : "var(--texto)";
 
   $("#acta-frase").textContent = yo && yo.meta !== null
-    ? `${yo.nombre} corrió ${estado.curso.largo} m en ${yo.meta.toFixed(2)} segundos. Ese caballo lo dibujó usted.`
+    ? `${yo.nombre} corrió ${estado.curso.largo} m en ${yo.meta.toFixed(2)} segundos. Ese corredor lo dibujó usted.`
     : "Nadie llegó a la meta. Pasa en las mejores familias.";
 
   // Contra cuánta gente grabada se midió de verdad
@@ -840,7 +870,7 @@ function mostrarActa(c) {
   orden.forEach((r, i) => ol.appendChild(filaResultado({
     pos: i + 1,
     nombre: r.nombre,
-    rol: rolDe(r),
+    rol: rolDe(r), carrera: r.carrera,
     meta: estado.curso.obstaculos
       ? `${r.limpios} de ${estado.curso.obstaculos.length} limpios · ${r.gritos} pulsaciones`
       : `${r.gritos} pulsaciones · ritmo ${(r.ritmo * 100).toFixed(0)}%`,
@@ -848,6 +878,29 @@ function mostrarActa(c) {
     dibujo: r.dibujo, color: r.color, sticker: r.sticker, gana: i === 0,
     apagado: r.esBot || r.esFantasma
   })));
+
+  for (const r of humanos) {
+    const puesto = orden.indexOf(r) + 1;
+    const tiempo = r.meta ?? null;
+    if (r.carrilMando != null)
+      sala.marcador(r.carrilMando, { final: true, puesto, meta: tiempo, curso: estado.curso.nombre });
+    if (r.telefono) void enviarEvento("/api/resultado", {
+      telefono: r.telefono, nombre: r.nombre, puesto, tiempo,
+      carrera: r.carrera || null, curso: estado.curso.nombre
+    });
+  }
+  $("#acta-vla").textContent = "Todos los que corren ganan. Reclame su premio desde su celular por WhatsApp — y pregunte por el webinar del " +
+    (EVENTO.webinar.fecha.match(/\d+/)?.[0] || EVENTO.webinar.fecha) + ": «" + EVENTO.webinar.titulo + "».";
+  $("#acta-premios").textContent = EVENTO.premios
+    .map(p => p.puesto + ".º " + p.titulo + (p.detalle ? " " + p.detalle : "")).join(" · ");
+  const whatsapp = linkWhatsApp("Hola, vengo del Connector Day y quiero reclamar mi premio de $ketch Race.");
+  $("#acta-whatsapp").href = whatsapp;
+  $("#qr-premio").width = 300;
+  // Misma URL y mensaje, con espacios como + y signos válidos sin escapar:
+  // el codificador local admite 106 bytes y el enlace de encodeURIComponent ocupa 132.
+  const qrWhatsApp = new URL(whatsapp);
+  qrWhatsApp.searchParams.sort();
+  pintarQR($("#qr-premio"), qrWhatsApp.href.replaceAll("%24", "$").replaceAll("%2C", ","));
 
   pintarHistorico(yo);
   pintarPoster($("#poster"), orden, estado.curso);
@@ -909,7 +962,7 @@ function pintarHistorico(yo) {
 }
 
 /** Una fila de resultado: misma pieza para el acta y para los rankings. */
-function filaResultado({ pos, nombre, rol, meta, tiempo, dibujo, color, sticker, gana, apagado }) {
+function filaResultado({ pos, nombre, rol, meta, tiempo, dibujo, color, sticker, carrera, gana, apagado }) {
   const li = document.createElement("li");
   li.className = "fila";
   li.style.setProperty("--carril", color);
@@ -924,7 +977,7 @@ function filaResultado({ pos, nombre, rol, meta, tiempo, dibujo, color, sticker,
   cuerpo.className = "fila-cuerpo";
   cuerpo.innerHTML = `<span class="fila-nombre"></span><span class="fila-meta"></span>`;
   cuerpo.querySelector(".fila-nombre").textContent = nombre;
-  cuerpo.querySelector(".fila-meta").textContent = rol ? `${rol} · ${meta}` : meta;
+  cuerpo.querySelector(".fila-meta").textContent = [rol, carreraPorId(carrera)?.nombre, meta].filter(Boolean).join(" · ");
   const t = document.createElement("span");
   t.className = "fila-tiempo";
   t.textContent = tiempo;
@@ -957,7 +1010,7 @@ $("#btn-lamina-close").addEventListener("click", () => { capaLamina.hidden = tru
 capaLamina.addEventListener("click", e => { if (e.target === capaLamina) capaLamina.hidden = true; });
 $("#btn-save-img").addEventListener("click", () => {
   const hoy = new Date().toISOString().slice(0, 10);
-  $("#poster").toBlob(b => almacen.descargar(`${hoy}_vla_caballos-de-fuerza.png`, b, "image/png"), "image/png");
+  $("#poster").toBlob(b => almacen.descargar(`${hoy}_vla_$KETCH RACE.png`, b, "image/png"), "image/png");
 });
 
 /* ═════════ Ranking del evento ═════════ */
@@ -1015,7 +1068,7 @@ $("#btn-keys-open").addEventListener("click", () => { capaStand.hidden = true; a
 $("#btn-export").addEventListener("click", () => {
   if (!almacen.leads().length) { $("#nota-stand").textContent = "No hay contactos que exportar todavía."; return; }
   const hoy = new Date().toISOString().slice(0, 10);
-  almacen.descargar(`${hoy}_vla_leads_caballos-de-fuerza.csv`, almacen.leadsCSV());
+  almacen.descargar(`${hoy}_vla_leads_$KETCH RACE.csv`, almacen.leadsCSV());
 });
 
 $("#btn-reset").addEventListener("click", () => {
@@ -1148,13 +1201,16 @@ let relojInactividad = 0;
 
 function reiniciarInactividad() {
   clearTimeout(relojInactividad);
-  const vigilada = ["carrera", "setup", "enroll", "grid", "ranking"].includes(estado.pantalla);
+  const vigilada = ["carrera", "setup", "enroll", "grid", "ranking", "result"].includes(estado.pantalla);
   if (!vigilada) return;
   relojInactividad = setTimeout(() => {
     estado.jinetes = [];
     estado.idx = 0;
+    capaLamina.hidden = true;
+    capaTeclas.hidden = true;
+    capaStand.hidden = true;
     ir("home");
-  }, INACTIVIDAD);
+  }, estado.pantalla === "result" ? INACTIVIDAD_ACTA : INACTIVIDAD);
 }
 
 ["pointerdown", "keydown", "pointermove"].forEach(ev =>

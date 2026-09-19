@@ -1,6 +1,6 @@
-# Caballos de Fuerza · VLA
+# $ketch Race · VLA
 
-Experiencia de stand para ferias de tecnología. Hasta cuatro personas dibujan cada una su caballo en un solo equipo y después lo ponen a correr aporreando un botón cada una.
+Experiencia de stand para ferias de tecnología. Hasta cuatro personas dibujan cada una su corredor en un solo equipo y después lo ponen a correr aporreando un botón cada una.
 
 Inspirado en la mecánica de [oddhoof.cc](https://oddhoof.cc); código, marca y diseño propios. La diferencia de fondo: allá se corre solo, aquí corren **hasta cuatro humanos a la vez**, y los carriles que sobran los llenan **corridas grabadas de gente que ya pasó por el stand**.
 
@@ -29,7 +29,7 @@ Los rivales no son los tres mejores del día, a propósito: se elige **el récor
 ## Cómo se juega
 
 1. **Empezar**, elegir carrera y cuántos jinetes (1 a 4).
-2. Cada jinete, por turnos: escribe su nombre, deja su WhatsApp o correo si quiere, y dibuja su caballo. Si se bloquea, **Présteme uno** le da el caballo de la casa.
+2. Cada jinete, por turnos: escribe su nombre, deja su WhatsApp y correo con autorización, elige su certificación y dibuja su corredor. Si se bloquea, **Présteme uno** le da el caballo de la casa.
 3. En la parrilla cada quien ve su botón asignado.
 4. Cuenta atrás y a correr. Cada jinete aporrea **su** tecla.
 5. **Acta**: su puesto, su tiempo y el ranking histórico de esa carrera al lado. Desde ahí puede **retar** a cualquier persona de la tabla y correr contra su corrida grabada, o abrir la lámina a pantalla completa para que le tome una foto.
@@ -47,7 +47,7 @@ Los rivales no son los tres mejores del día, a propósito: se elige **el récor
 
 Exportar contactos y reiniciar el evento están detrás de una combinación de teclas y no en una pantalla pública **a propósito**: son ocho horas de captación y los teléfonos de terceros. Un visitante no puede descubrirlos por accidente.
 
-**Atajos:** `Enter` dispara la acción principal de cada pantalla (empezar, dar la salida, otra carrera), porque cuatro personas ocupan el teclado y buscar el ratón no es una opción. `Esc` abandona una carrera o cierra cualquier ventana. Si nadie toca nada durante 100 segundos, la pantalla vuelve sola a la portada.
+**Atajos:** `Enter` dispara la acción principal de cada pantalla (empezar, dar la salida, otra carrera), porque cuatro personas ocupan el teclado y buscar el ratón no es una opción. `Esc` abandona una carrera o cierra cualquier ventana. Si nadie toca nada durante 100 segundos en el registro, la parrilla o el ranking, la pantalla vuelve sola a la portada; en el acta vuelve a los 60 segundos.
 
 ### Los botones
 
@@ -70,7 +70,7 @@ Hay dos maneras de jugar y las dos funcionan:
 
 **Con el teclado de la mesa.** Es la de siempre y no necesita red de ninguna clase. Cuatro personas alrededor de un teclado.
 
-**Con los celulares.** Cada quien entra desde su teléfono, dibuja su caballo con el dedo y durante la carrera tiene tres botones a pantalla completa. La carrera sigue siendo una sola, en la pantalla grande.
+**Con los celulares.** Cada quien entra desde su teléfono, dibuja su corredor con el dedo y durante la carrera tiene tres botones a pantalla completa. La carrera sigue siendo una sola, en la pantalla grande.
 
 > Ojo con la referencia: **oddhoof no hace esto.** Su código tiene backend (`/api/leaderboard`, `/api/ghosts`) pero ni un WebSocket. Cuando dice que se puede jugar en el celular, quiere decir que la página es responsive y uno juega solo, entero, en su teléfono. Cuatro amigos serían cuatro partidas sueltas que solo se cruzan como fantasmas en el ranking. Lo de aquí es otra cosa: cuatro mandos de una misma carrera.
 
@@ -79,7 +79,7 @@ Hay dos maneras de jugar y las dos funcionan:
 1. En la mesa: **Empezar → elegir carrera → «Que jueguen desde su celular»**.
 2. Sale un **código QR** y un código de sala de cuatro letras.
 3. Cada participante escanea con la cámara del teléfono. No se instala nada.
-4. Dibuja, toca «Esto es un caballo» y espera.
+4. Dibuja, toca «Esto es un corredor» y espera.
 5. El promotor da la salida desde la mesa.
 
 El celular no simula nada: dibuja y manda pulsaciones. Toda la carrera vive en la mesa, en un solo sitio, y eso es lo que garantiza que los cuatro vean exactamente la misma carrera y que nadie pueda adelantar su propio reloj.
@@ -145,7 +145,7 @@ Medido en la pista de obstáculos, cadencia media: **17,2 s** pasándolos todos 
 
 ## Datos y privacidad
 
-- Todo vive en el `localStorage` **del equipo del stand**. No hay servidor, no hay nube, no sale nada a internet.
+- El navegador conserva contactos y corridas como respaldo local. Con `node server.js`, los registros y resultados también se envían al servidor y a Bitrix cuando está configurado (ver operación de Connector Day).
 - **WhatsApp y correo son obligatorios para jugar.** No es un peaje: el ranking compite por créditos VLA y hacen falta los datos para avisarle a quien gane. La pantalla lo dice antes de pedirlos, que es lo que hace que la gente los dé sin problema.
 - Los dos campos se validan de verdad: al menos ocho dígitos en el teléfono, y arroba con dominio en el correo. Un dato inventado a la carrera no sirve en el CRM.
 - El CSV sale con fecha, nombre, teléfono, correo, autorización y origen. Listo para importar.
@@ -223,3 +223,15 @@ Sin frameworks, sin build, sin dependencias. En una feria, lo que no se instala 
 - [ ] Desactivar suspensión y salvapantallas del equipo.
 - [ ] **Ctrl+Shift+E → Reiniciar evento** para arrancar el ranking limpio.
 - [ ] Al cerrar el día: **Ctrl+Shift+E → Exportar contactos** antes de apagar.
+
+## Connector Day 2026 — operación
+
+- **QR del voluntario:** `/mando?v=CODIGO`. Captura nombre, WhatsApp, correo, consentimiento y carrera; atribuye el lead al voluntario aunque no llegue a correr. Después pide el código de cuatro letras de la pantalla.
+- **QR de la pantalla:** `/mando?s=SALA`, generado en la sala de la mesa. Recupera el perfil del celular si ya existe; un registro nuevo sin voluntario se atribuye a `stand`. La mesa solo envía leads de teclado (`origen: "mesa"`); el celular envía los suyos (`origen: "mando"`). Se deduplican por teléfono normalizado.
+- **Panel:** `/voluntarios.html?clave=…`. La clave vive en Railway como `PANEL_CLAVE`. Permite altas, consultar leads y pagos, exportar CSV e imprimir el QR personal. Cada lead válido paga lo indicado en `EVENTO.pagoPorLead` (hoy $2).
+- **Bitrix:** el servidor usa `BITRIX_WEBHOOK_URL`, nunca expuesto al navegador. Envía nombre, teléfono, correo y contexto de carrera, voluntario, origen y fecha. Fuente `CONNECTOR_DAY_2026`, estatus `JUNK` («NO USAR Base de datos»), responsable `4391` («Boletin»). UTM: `UTM_SOURCE = voluntario || stand`, `UTM_CAMPAIGN = sketch-race-connector-day`, `UTM_CONTENT = carrera`. Al terminar, actualiza comentarios con puesto, tiempo (o «no llegó») y premio. Un asesor reasigna el lead.
+- **Respaldo:** `data/leads.jsonl` y `data/voluntarios.json` en el servidor, más contactos locales de la mesa. Sin volumen, el disco de Railway es efímero: Bitrix conserva los leads enviados y el panel permite cruzar sus conteos. Sin internet se puede jugar localmente, pero no enviar a Bitrix ni abrir WhatsApp; los fallos de envío de la mesa quedan en consola y no se reintentan automáticamente.
+- **Premios:** 1.º $100 en créditos VLA + asesoría de carrera gratis; 2.º $75; 3.º $50; 4.º $25. Se cambian en `EVENTO.premios` de `src/config.js`. El acta muestra los premios y un QR para reclamar desde quienes jugaron con teclado; los mandos reciben su puesto final y muestran su premio.
+- **Ventas y webinar:** `EVENTO.whatsapp` en `src/config.js` define el destino de los reclamos (actualmente `50683652242`, pendiente de confirmación comercial según la configuración). `EVENTO.webinar` define el título, fecha y URL opcional del webinar del 24 de septiembre. El acta invita a preguntar por él en WhatsApp.
+- **Kiosco:** el acta vuelve a la portada tras 60 segundos sin actividad y limpia los participantes de la ronda. El resto conserva sus tiempos.
+- **Rollback:** `git checkout estable-2026-09-18` sobre un árbol limpio, y reiniciar/redesplegar el servidor. Guardar antes los cambios locales que se quieran conservar.

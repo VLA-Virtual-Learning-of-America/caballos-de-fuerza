@@ -57,7 +57,7 @@ export function guardarLead({ nombre, telefono, correo, consiente }) {
     telefono,
     correo,
     consiente: true,
-    origen: "Caballos de Fuerza, tech fest"
+    origen: "Sketch Race, Connector Day 2026"
   });
   escribir(K_LEADS, lista);
 }

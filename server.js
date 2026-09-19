@@ -118,7 +118,7 @@ function actualizarResultadoBitrix(telefono) {
   const tarea = (actualizaciones.get(telefono) || Promise.resolve()).then(async () => {
     const lead = leads.get(telefono);
     const lineas = (resultados.get(telefono) || []).map(r =>
-      `Resultado: ${r.puesto}.º en ${r.curso} (${r.tiempo}s) · premio: ${premioPorPuesto(r.puesto).titulo}`);
+      `Resultado: ${r.puesto}.º en ${r.curso} (${r.tiempo === null ? "no llegó" : `${r.tiempo}s`}) · premio: ${premioPorPuesto(r.puesto).titulo}`);
     const d = await bitrix("crm.lead.update", { id: lead.bitrixId, fields: { COMMENTS: [comentarios(lead), ...lineas].join("\n") } });
     if (d.result !== true) throw new Error("Bitrix: actualización no confirmada");
   }).catch(e => { console.error(e.message); evento({ t: "bitrix", telefono, error: e.message }); });
@@ -179,7 +179,7 @@ async function api(req, res, url) {
     if (ruta === "/api/resultado" && req.method === "POST") {
       const d = await cuerpo(req), telefono = telefonoNormal(d.telefono);
       if (telefono.length < 8 || !Number.isInteger(d.puesto) || d.puesto < 1 || d.puesto > 4 ||
-          !Number.isFinite(d.tiempo) || d.tiempo < 0 || typeof d.curso !== "string" || !d.curso.trim()) throw new Error("Resultado inválido");
+          (d.tiempo !== null && (!Number.isFinite(d.tiempo) || d.tiempo < 0)) || typeof d.curso !== "string" || !d.curso.trim()) throw new Error("Resultado inválido");
       const r = { t: "resultado", telefono, nombre: String(d.nombre || ""), puesto: d.puesto, tiempo: d.tiempo,
         carrera: carreraPorId(d.carrera)?.id || null, curso: d.curso, fecha: new Date().toISOString() };
       resultados.set(telefono, [...(resultados.get(telefono) || []), r]); evento(r);

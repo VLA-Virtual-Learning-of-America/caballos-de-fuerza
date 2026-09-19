@@ -76,11 +76,17 @@ body{
   font-family:inherit;font-size:.86rem;font-weight:600;letter-spacing:-.01em;
   display:flex;align-items:center;gap:var(--e-2);
 }
-.bar-marca i{
-  font-style:normal;font-size:.66rem;font-weight:650;letter-spacing:.12em;
-  color:var(--vla);border:1px solid color-mix(in srgb,var(--vla) 40%,transparent);
-  border-radius:3px;padding:1px 5px;
+.bar-marca img{height:20px;width:auto;display:block}
+.bar-wordmark{border-left:1px solid var(--filete);padding-left:var(--e-3)}
+.marca-peso{font-size:1.5em;line-height:1;color:var(--vla)}
+.bar-wordmark .marca-peso{font-size:1.25em}
+.ticker{
+  position:fixed;top:58px;left:0;right:0;z-index:29;margin:0;
+  padding:8px var(--borde-pantalla);border-bottom:1px solid var(--filete-suave);
+  font-size:var(--t-meta);letter-spacing:.04em;white-space:nowrap;overflow:hidden;
+  color:color-mix(in srgb,var(--vla) 55%,var(--texto-2));background:var(--tinta-0);
 }
+.bar[data-oculta]+.ticker{display:none}
 .bar-nav{
   display:flex;align-items:center;gap:var(--e-4);
   font-size:var(--t-meta);font-weight:550;letter-spacing:.08em;
@@ -90,7 +96,7 @@ body{
 
 /* ───────── Pantallas ───────── */
 .pantalla{
-  position:fixed;inset:58px 0 0 0;
+  position:fixed;inset:94px 0 0 0;
   display:none;
   padding:var(--borde-pantalla);
 }
@@ -597,12 +603,21 @@ em{font-style:normal;color:var(--vla)}
 }
 
 /* Certificaciones: filetes y texto, sin tarjetas. */
-.sticker-selector{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;border-top:1px solid var(--filete);padding-top:8px;color:var(--texto-2);font-size:.85rem}
-.sticker-selector label,.sticker-selector small{grid-column:1/-1}
-.sticker-selector select{min-width:0;width:100%;font:inherit;color:var(--texto);background:var(--tinta-0);border:0;border-bottom:1px solid var(--filete);padding:8px 0}
-.sticker-selector select:focus-visible{outline:1px solid var(--vla)}
-.sticker-selector select:disabled{opacity:.5}
+.carrera-selector{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;border-top:1px solid var(--filete);padding-top:8px;color:var(--texto-2);font-size:.85rem}
+.carrera-selector label,.carrera-selector small{grid-column:1/-1}
+.carrera-selector select{min-width:0;width:100%;font:inherit;color:var(--texto);background:var(--tinta-0);border:0;border-bottom:1px solid var(--filete);padding:8px 0}
+.carrera-selector select:focus-visible{outline:1px solid var(--vla)}
+.carrera-selector small{font-size:var(--t-meta);line-height:1.4}
 .sticker-etiqueta{display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--texto-2);line-height:1.4}
 .sticker-etiqueta img{width:40px;height:24px;object-fit:contain;background:#F2F6F2;padding:3px;flex:none}
-#sticker-preview .sticker-etiqueta{font-size:0}
-#sticker-preview:empty{display:none}
+#carrera-preview .sticker-etiqueta{font-size:0}
+#carrera-preview:empty{display:none}
+
+/* Connector Day: premio y acceso desde el teclado. */
+.hero-titulo{font-size:clamp(3rem,5.8vw,7rem);white-space:nowrap}
+.acta-premio{display:flex;align-items:center;gap:var(--e-3);border-top:1px solid var(--filete);margin-top:var(--e-3);padding-top:var(--e-2);flex:0 0 auto}
+.acta-premio>div{min-width:0;flex:1}
+.acta-premio .acta-vla{margin:0;padding:0;border:0}
+.acta-premios{font-size:var(--t-meta);color:var(--vla);line-height:1.5;margin-top:var(--e-2)}
+.acta-whatsapp{flex:0 0 150px;color:var(--texto-2);font-size:var(--t-meta);text-align:center;text-decoration:none}
+.acta-whatsapp canvas{display:block;width:150px;height:150px;margin-bottom:4px}

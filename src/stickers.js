@@ -6,7 +6,7 @@ export const STICKERS = Object.freeze([
   { codigo: "MKT", nombre: "Marketing Digital", logo: "MKT.svg" },
   { codigo: "AIB", nombre: "AI Builder Foundation", logo: "AIB.svg" },
   { codigo: "ACM", nombre: "AI Content Machine", logo: "ACM.svg" },
-  { codigo: "CYB", nombre: "Ciberseguridad", logo: "CYB.svg" },
+  { codigo: "CYB", nombre: "Cyber Seguridad", logo: "CYB.svg" },
   { codigo: "SIX", nombre: "Lean Six Sigma", logo: "SIX.svg" }
 ].map(Object.freeze));
 

@@ -33,7 +33,7 @@ export function pintarPoster(canvas, orden, curso) {
   filete(c, M, 132, W - M);
   c.font = T(22, 600);
   c.fillStyle = TEXTO_3;
-  letras(c, "CABALLOS DE FUERZA", M, 116, 3.4);
+  letras(c, "$KETCH RACE", M, 116, 3.4);
   c.font = T(22, 600);
   c.fillStyle = VLA;
   c.textAlign = "right";

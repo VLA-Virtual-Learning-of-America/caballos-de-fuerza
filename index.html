@@ -3,29 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Caballos de Fuerza · VLA</title>
-<meta name="description" content="Dibuje su caballo. Póngalo a correr. Experiencia de stand de Virtual Learning of America para cuatro participantes.">
+<title>$ketch Race · VLA</title>
+<meta name="description" content="$ketch Race · VLA. Dibujá tu corredor. Elegí tu carrera. Ganá créditos VLA.">
 <link rel="stylesheet" href="./fonts/fonts.css">
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
 <header class="bar" id="bar">
-  <button class="bar-marca" id="bar-marca">Caballos de fuerza<i>VLA</i></button>
+  <button class="bar-marca" id="bar-marca"><img src="./assets/brand/logo-vla-blanco.png" alt="VLA" height="20"><span class="bar-wordmark"><span class="marca-peso">$</span>ketch Race</span></button>
   <nav class="bar-nav" id="bar-nav"></nav>
 </header>
+<p class="ticker" id="ticker-mercado"></p>
 
 <!-- ════════ INICIO ════════ -->
 <section class="pantalla es-activa" id="p-home">
   <canvas class="hero-lienzo" id="hero"></canvas>
   <div class="bloque bloque-abajo">
     <p class="kicker">Virtual Learning of America</p>
-    <h1 class="hero-titulo">Caballos<br>de fuerza<em>.</em></h1>
-    <p class="sub">Dibuje su caballo. Póngalo a correr.</p>
+    <h1 class="hero-titulo"><span class="marca-peso">$</span>ketch Race<em>.</em></h1>
+    <p class="sub">Dibujá tu corredor. Elegí tu carrera. Ganá créditos VLA.</p>
     <p class="hero-datos">
       <span>Hasta 4 personas</span>
       <span>Un minuto</span>
-      <span>Los mejores tiempos ganan créditos VLA</span>
+      <span>Todos los que corren ganan créditos VLA</span>
       <span>Dibujar bien no sirve de nada</span>
     </p>
     <div class="acciones">
@@ -67,7 +68,7 @@
       <ol class="lobby-pasos">
         <li id="lobby-paso-red">Conéctese al WiFi del stand</li>
         <li>Escanee el código o escriba la dirección</li>
-        <li>Dibuje su caballo en el celular</li>
+        <li>Dibuje su corredor en el celular</li>
       </ol>
       <p class="lobby-url" id="lobby-url"></p>
       <p class="lobby-codigo">Sala <b id="lobby-codigo">····</b></p>
@@ -91,7 +92,7 @@
       <div class="tablero-marco">
         <canvas id="pad"></canvas>
         <div class="tablero-vacio" id="pad-vacio">
-          <b>Su idea de un caballo va aquí</b>
+          <b>Su corredor va aquí</b>
           <span>Lo feo corre igual de rápido: el dibujo no da ventaja.</span>
         </div>
         <span class="tablero-rumbo">Corre hacia allá</span>
@@ -103,11 +104,11 @@
           <button class="enlace enlace-mini" id="btn-clear">Limpiar</button>
         </div>
       </div>
-      <div class="sticker-selector">
-        <label for="in-sticker">Después de dibujar: certificación VLA · opcional</label>
-        <select id="in-sticker" form="ficha" aria-describedby="sticker-ayuda" disabled></select>
-        <span id="sticker-preview"></span>
-        <small id="sticker-ayuda">Solo decora su caballo. No cambia cómo corre.</small>
+      <div class="carrera-selector">
+        <label for="in-carrera">Elegí tu carrera · obligatorio</label>
+        <select id="in-carrera" form="ficha" required aria-describedby="carrera-ayuda"></select>
+        <span id="carrera-preview"></span>
+        <small id="carrera-ayuda"></small>
       </div>
       <div class="inscritos" id="inscritos"></div>
     </div>
@@ -115,8 +116,8 @@
     <form class="ficha" id="ficha" novalidate>
       <h2 class="titulo titulo-sm">Su turno<em id="enroll-punto">.</em></h2>
       <p class="ficha-motivo">
-        Su tiempo entra al ranking del evento. <b>Los mejores se llevan créditos VLA</b>,
-        así que necesitamos cómo avisarle si gana.
+        Su tiempo entra al ranking del evento. <b>Todos los que corren ganan créditos VLA</b>,
+        así que necesitamos su contacto para entregar el premio.
       </p>
       <label class="campo">
         <span>Nombre del jinete</span>
@@ -136,7 +137,7 @@
       </label>
       <p class="aviso" id="enroll-err" role="alert"></p>
       <div class="acciones">
-        <button type="submit" class="accion" id="btn-enroll-next">Esto es un caballo</button>
+        <button type="submit" class="accion" id="btn-enroll-next">Esto es un corredor</button>
         <button type="button" class="enlace" id="btn-enroll-back">Atrás</button>
       </div>
     </form>
@@ -178,10 +179,16 @@
       <p class="sub" id="acta-frase"></p>
       <p class="nota" id="acta-marca"></p>
       <ol class="tabla" id="tabla-final"></ol>
-      <p class="acta-vla">
-        Su marca queda en el ranking del evento. <b>Los mejores tiempos se llevan créditos VLA</b>
-        y le escribimos al WhatsApp que dejó. Mientras tanto, pregunte en el stand por su certificación.
-      </p>
+      <div class="acta-premio">
+        <div>
+          <p class="acta-vla" id="acta-vla"></p>
+          <p class="acta-premios" id="acta-premios"></p>
+        </div>
+        <a class="acta-whatsapp" id="acta-whatsapp" target="_blank" rel="noopener">
+          <canvas id="qr-premio" width="300" height="300" aria-label="QR para reclamar por WhatsApp"></canvas>
+          <span>Reclamar por WhatsApp</span>
+        </a>
+      </div>
       <div class="acciones">
         <button class="accion" id="btn-again">Otra carrera<kbd>Enter</kbd></button>
         <button class="enlace" id="btn-lamina">Lámina para la foto</button>
