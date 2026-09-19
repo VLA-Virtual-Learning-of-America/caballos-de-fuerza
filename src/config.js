@@ -11,10 +11,9 @@ export const EVENTO = Object.freeze({
   nombre: "Connector Day 2026",
   juego: "$ketch Race",
 
-  // WhatsApp de ventas al que llega el reclamo del premio. Sin "+", solo dígitos.
-  // Precedente: el CTA de MegaCon 2026 (vla-strike-force) usó este mismo número.
-  // PENDIENTE de confirmar por Josué: la web de VLA lista 4105-3820 como teléfono.
-  whatsapp: "50683652242",
+  // WhatsApp Business oficial "VLA Academy" (+506 6266 5456), confirmado por Josué el 19-sep-2026.
+  // Sin "+", solo dígitos.
+  whatsapp: "50662665456",
 
   // Premios por puesto. Todos ganan: el puesto solo cambia el monto.
   // Precedente real (Expo U 2024 en Bitrix): "$25 (VLA Cred.)", "$75 + asesoría".
