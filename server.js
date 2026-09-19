@@ -54,6 +54,16 @@ try {
   const previos = JSON.parse(await fs.promises.readFile(path.join(DATA, "voluntarios.json"), "utf8"));
   for (const [c, v] of Object.entries(previos)) voluntarios[c] = { nombre: String(v.nombre || ""), leads: 0 };
 } catch { /* primer arranque o disco efímero */ }
+/* Semilla versionada: el disco de Railway es efímero y cada deploy borraba la lista de asesores
+   (pasó el 19-sep-2026 el día del evento). Los nombres viven en el repo; los conteos se
+   reconstruyen desde Bitrix con el botón del panel. La semilla nunca pisa un nombre ya editado. */
+try {
+  const semilla = JSON.parse(await fs.promises.readFile(path.join(RAIZ, "asesores", "asesores.json"), "utf8"));
+  for (const [c, nombre] of Object.entries(semilla)) {
+    const codigo = codigoNormal(c);
+    if (codigo && !voluntarios[codigo]?.nombre) voluntarios[codigo] = { nombre: String(nombre), leads: voluntarios[codigo]?.leads || 0 };
+  }
+} catch { /* sin semilla: se registran desde el panel */ }
 try {
   const journal = await fs.promises.readFile(path.join(DATA, "leads.jsonl"), "utf8");
   for (const linea of journal.split("\n")) {
