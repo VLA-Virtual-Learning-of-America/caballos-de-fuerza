@@ -7,13 +7,19 @@
    adelantando su propio reloj.
 */
 
-import { crearTablero } from "./draw.js";
+import { crearTablero, caballoDeMuestra } from "./draw.js";
 import { normalizar, miniatura } from "./scene.js";
+import { crearHero } from "./hero.js";
 
 const $ = s => document.querySelector(s);
 const CARRILES = ["#00E676", "#FF6200", "#22D3EE", "#E879F9"];
 
 const estado = { ws: null, carril: null, sala: null, ficha: null, fase: "entrar", reintentos: 0 };
+
+// Animación de portada: un corredor de muestra trotando mientras se registra.
+const heroEntrada = crearHero($("#m-hero"), normalizar(caballoDeMuestra()));
+heroEntrada.arrancar();
+window.addEventListener("resize", () => heroEntrada.remedir(), { passive: true });
 
 const ir = p => {
   estado.fase = p;
@@ -88,21 +94,25 @@ function recibir(m) {
 const TELEFONO_OK = t => (t.match(/\d/g) || []).length >= 8;
 const CORREO_OK = c => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(c);
 
-// El código puede venir en el QR: ?s=ABCD
+// El código puede venir en el QR: ?s=ABCD — si vino solo, no hace falta mostrarlo
 const desdeURL = new URLSearchParams(location.search).get("s");
-if (desdeURL) $("#m-sala").value = desdeURL.toUpperCase().slice(0, 4);
+if (desdeURL) {
+  $("#m-sala").value = desdeURL.toUpperCase().slice(0, 4);
+  $("#m-campo-sala").setAttribute("data-oculto", "");
+}
 
 $("#m-ficha").addEventListener("submit", e => {
   e.preventDefault();
   const err = $("#m-error");
   const sala = $("#m-sala").value.trim().toUpperCase();
   const nombre = $("#m-nombre").value.trim();
-  const telefono = $("#m-tel").value.trim();
+  const telLocal = $("#m-tel").value.trim();
+  const telefono = "+506 " + telLocal;
   const correo = $("#m-correo").value.trim();
 
   if (sala.length !== 4) { err.textContent = "El código de la sala son cuatro letras."; return; }
   if (nombre.length < 2) { err.textContent = "Escriba su nombre."; return; }
-  if (!TELEFONO_OK(telefono)) { err.textContent = "Escriba un WhatsApp válido: al menos ocho dígitos."; return; }
+  if (!TELEFONO_OK(telLocal)) { err.textContent = "Escriba un WhatsApp válido: al menos ocho dígitos."; return; }
   if (!CORREO_OK(correo)) { err.textContent = "Escriba un correo válido, con arroba y dominio."; return; }
   if (!$("#m-consent").checked) { err.textContent = "Hay que marcar la autorización para poder correr."; return; }
 

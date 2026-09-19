@@ -33,6 +33,7 @@ body.mando{
   border:1px solid color-mix(in srgb,var(--carril,#00E676) 45%,transparent);
   border-radius:3px;padding:1px 6px;
 }
+.m-logo{height:20px;width:auto;display:block}
 .m-dato{font-size:var(--t-meta);letter-spacing:.08em;text-transform:uppercase;color:var(--texto-3)}
 
 .m-cuerpo{flex:1 1 auto;overflow-y:auto;display:flex;flex-direction:column;padding-top:20px}
@@ -46,8 +47,18 @@ body.mando{
 }
 .m-motivo b{color:var(--vla);font-weight:600}
 
+.m-hero-corredor{
+  width:100%;height:min(28vh,180px);flex:0 0 auto;margin-bottom:6px;
+}
+.m-hero-lienzo{width:100%;height:100%;display:block;pointer-events:none}
+
+.m-kicker{
+  margin-top:6px;font-size:.98rem;font-weight:600;color:var(--vla);letter-spacing:-.01em;
+}
+
 /* ───────── Formulario ───────── */
 .m-campo{display:block;margin-top:18px}
+.m-campo-sala[data-oculto]{display:none}
 .m-campo>span{
   display:block;font-size:var(--t-meta);font-weight:550;letter-spacing:.09em;
   text-transform:uppercase;color:var(--texto-3);margin-bottom:6px;
@@ -66,6 +77,12 @@ body.mando{
   font-size:2.2rem!important;font-weight:700!important;letter-spacing:.18em!important;
   text-transform:uppercase;text-align:center;
 }
+.m-tel-grupo{display:flex;align-items:baseline;gap:8px}
+.m-tel-prefijo{
+  flex:0 0 auto;font-size:1.15rem;font-weight:600;color:var(--texto-3);
+  padding:10px 0;border-bottom:1px solid var(--filete);
+}
+.m-tel-grupo input{flex:1 1 auto}
 .m-permiso{
   display:flex;gap:12px;margin-top:18px;font-size:.82rem;line-height:1.5;color:var(--texto-3);
 }

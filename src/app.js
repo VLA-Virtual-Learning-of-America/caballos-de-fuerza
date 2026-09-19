@@ -262,7 +262,7 @@ function prepararFicha() {
   const color = CARRILES[estado.idx];
   $("#enroll-punto").style.color = color;
   $("#in-name").value = "";
-  $("#in-phone").value = "";
+  $("#in-phone").value = "+506 ";
   $("#in-email").value = "";
   $("#in-consent").checked = false;
   $("#enroll-err").textContent = "";

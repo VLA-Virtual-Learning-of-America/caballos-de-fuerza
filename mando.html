@@ -15,16 +15,20 @@
 <!-- ════════ ENTRAR ════════ -->
 <section class="m-pantalla es-activa" id="m-entrar">
   <header class="m-cabecera">
-    <span class="m-marca">Caballos de fuerza<i>VLA</i></span>
+    <span class="m-marca"><img class="m-logo" src="./assets/brand/logo-vla-blanco.png" alt="VLA Academy"></span>
   </header>
   <form class="m-cuerpo" id="m-ficha" novalidate>
-    <h1 class="m-titulo">Su mando<em>.</em></h1>
+    <div class="m-hero-corredor">
+      <canvas id="m-hero" class="m-hero-lienzo"></canvas>
+    </div>
+    <h1 class="m-titulo">Su corredor<em>.</em></h1>
+    <p class="m-kicker">Cree su corredor. Gánele a todos. Lleve el premio.</p>
     <p class="m-motivo">
-      Su tiempo entra al ranking del evento. <b>Los mejores se llevan créditos VLA</b>,
-      así que necesitamos cómo avisarle si gana.
+      Tenemos que ponerle nombre a esto. Su tiempo entra al ranking del evento —
+      <b>los mejores se llevan créditos VLA</b>, así que necesitamos cómo avisarle si gana.
     </p>
 
-    <label class="m-campo">
+    <label class="m-campo m-campo-sala" id="m-campo-sala">
       <span>Código de la sala</span>
       <input type="text" id="m-sala" maxlength="4" autocapitalize="characters" autocomplete="off"
              inputmode="text" placeholder="ABCD" class="m-sala-input">
@@ -35,7 +39,10 @@
     </label>
     <label class="m-campo">
       <span>WhatsApp <i>· obligatorio</i></span>
-      <input type="tel" id="m-tel" maxlength="24" inputmode="tel" autocomplete="off" placeholder="+506 8888 8888">
+      <div class="m-tel-grupo">
+        <span class="m-tel-prefijo">+506</span>
+        <input type="tel" id="m-tel" maxlength="20" inputmode="numeric" autocomplete="off" placeholder="8888 8888">
+      </div>
     </label>
     <label class="m-campo">
       <span>Correo electrónico <i>· obligatorio</i></span>
@@ -54,7 +61,7 @@
 <!-- ════════ DIBUJO ════════ -->
 <section class="m-pantalla" id="m-dibujo">
   <header class="m-cabecera">
-    <span class="m-marca">Su caballo<i id="m-carril-1">1</i></span>
+    <span class="m-marca">Su corredor<i id="m-carril-1">1</i></span>
     <span class="m-dato" id="m-quien"></span>
   </header>
   <div class="m-pad-zona">
@@ -72,7 +79,7 @@
     <button class="m-chico" id="m-deshacer">Deshacer</button>
     <button class="m-chico" id="m-limpiar">Limpiar</button>
   </div>
-  <button class="m-accion" id="m-listo">Esto es un caballo</button>
+  <button class="m-accion" id="m-listo">Esto es un corredor</button>
 </section>
 
 <!-- ════════ ESPERA ════════ -->
