@@ -18,10 +18,219 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import os from "node:os";
+import { carreraPorId } from "./src/carreras.js";
+import { EVENTO, premioPorPuesto } from "./src/config.js";
 
 const RAIZ = import.meta.dirname;
 const PUERTO = Number(process.env.PORT) || 4173;
 const CARRILES = 4;
+
+/* Persistencia best-effort, serializada para conservar el orden del journal. */
+const DATA = path.resolve(process.env.DATA_DIR || "./data");
+const WEBHOOK = process.env.BITRIX_WEBHOOK_URL || "";
+const PANEL = process.env.PANEL_CLAVE || "";
+const leads = new Map(), resultados = new Map(), voluntarios = Object.create(null);
+let escritura = Promise.resolve();
+const telefonoNormal = valor => {
+  const n = String(valor || "").replace(/\D/g, "");
+  return n.length === 8 ? "506" + n : n;
+};
+const codigoNormal = valor => {
+  const c = String(valor || "").trim().toUpperCase();
+  return /^[A-Z0-9_-]{2,20}$/.test(c) ? c : null;
+};
+function persistir(tarea) {
+  escritura = escritura.then(tarea).catch(() => console.error("No se pudo persistir un evento local."));
+}
+function evento(datos) {
+  persistir(() => fs.promises.appendFile(path.join(DATA, "leads.jsonl"), JSON.stringify(datos) + "\n"));
+}
+function guardarVoluntarios() {
+  const texto = JSON.stringify(voluntarios);
+  persistir(() => fs.promises.writeFile(path.join(DATA, "voluntarios.json"), texto));
+}
+try { await fs.promises.mkdir(DATA, { recursive: true }); } catch { console.error("DATA_DIR no disponible; se continúa en memoria."); }
+try {
+  const previos = JSON.parse(await fs.promises.readFile(path.join(DATA, "voluntarios.json"), "utf8"));
+  for (const [c, v] of Object.entries(previos)) voluntarios[c] = { nombre: String(v.nombre || ""), leads: 0 };
+} catch { /* primer arranque o disco efímero */ }
+try {
+  const journal = await fs.promises.readFile(path.join(DATA, "leads.jsonl"), "utf8");
+  for (const linea of journal.split("\n")) {
+    if (!linea.trim()) continue;
+    try {
+      const e = JSON.parse(linea);
+      if (e.t === "lead") leads.set(e.telefono, { ...leads.get(e.telefono), ...e });
+      if (e.t === "bitrix" && e.id && leads.has(e.telefono)) leads.get(e.telefono).bitrixId = e.id;
+      if (e.t === "resultado") resultados.set(e.telefono, [...(resultados.get(e.telefono) || []), e]);
+    } catch { console.error("Línea inválida en leads.jsonl; se omite."); }
+  }
+} catch { /* primer arranque */ }
+for (const lead of leads.values()) {
+  const c = lead.voluntario || "stand";
+  voluntarios[c] ||= { nombre: "", leads: 0 };
+  voluntarios[c].leads++;
+}
+if (!WEBHOOK) console.log("BITRIX_WEBHOOK_URL no configurado; se continúa sin Bitrix.");
+
+function comentarios(lead) {
+  const c = carreraPorId(lead.carrera);
+  return `${EVENTO.nombre}\nCarrera: ${c ? c.nombre + " · " + c.cert : "sin carrera"}\nVoluntario: ${lead.voluntario || "stand"}\nOrigen: ${lead.origen}\nFecha: ${lead.fecha}`;
+}
+async function bitrix(metodo, datos) {
+  if (!WEBHOOK) throw new Error("Bitrix no configurado");
+  let r;
+  try {
+    r = await fetch(`${WEBHOOK.replace(/\/?$/, "/")}${metodo}.json`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datos), signal: AbortSignal.timeout(15000)
+    });
+  } catch { throw new Error("Bitrix: conexión fallida o timeout"); }
+  if (!r.ok) throw new Error(`Bitrix HTTP ${r.status}`);
+  let d;
+  try { d = await r.json(); } catch { throw new Error("Bitrix: respuesta inválida"); }
+  if (d.error) throw new Error("Bitrix rechazó la operación");
+  return d;
+}
+async function crearLeadBitrix(lead) {
+  if (!WEBHOOK) return;
+  try {
+    const c = carreraPorId(lead.carrera);
+    const d = await bitrix("crm.lead.add", { fields: {
+      TITLE: `Sketch Race — ${lead.nombre} (${c?.nombre || "sin carrera"})`, NAME: lead.nombre,
+      PHONE: [{ VALUE: "+" + lead.telefono, VALUE_TYPE: "MOBILE" }],
+      EMAIL: [{ VALUE: lead.correo, VALUE_TYPE: "WORK" }],
+      SOURCE_ID: "CONNECTOR_DAY_2026", STATUS_ID: "JUNK", ASSIGNED_BY_ID: 4391,
+      UTM_SOURCE: lead.voluntario || "stand", UTM_CAMPAIGN: "sketch-race-connector-day",
+      UTM_CONTENT: lead.carrera || "", COMMENTS: comentarios(lead)
+    } });
+    if (!/^\d+$/.test(String(d.result))) throw new Error("Bitrix: ID inválido");
+    lead.bitrixId = d.result;
+    evento({ t: "bitrix", telefono: lead.telefono, id: d.result });
+  } catch (e) {
+    evento({ t: "bitrix", telefono: lead.telefono, error: e.message });
+    console.error(e.message);
+  }
+}
+const actualizaciones = new Map();
+function actualizarResultadoBitrix(telefono) {
+  if (!WEBHOOK || !leads.get(telefono)?.bitrixId) return;
+  const tarea = (actualizaciones.get(telefono) || Promise.resolve()).then(async () => {
+    const lead = leads.get(telefono);
+    const lineas = (resultados.get(telefono) || []).map(r =>
+      `Resultado: ${r.puesto}.º en ${r.curso} (${r.tiempo}s) · premio: ${premioPorPuesto(r.puesto).titulo}`);
+    const d = await bitrix("crm.lead.update", { id: lead.bitrixId, fields: { COMMENTS: [comentarios(lead), ...lineas].join("\n") } });
+    if (d.result !== true) throw new Error("Bitrix: actualización no confirmada");
+  }).catch(e => { console.error(e.message); evento({ t: "bitrix", telefono, error: e.message }); });
+  actualizaciones.set(telefono, tarea);
+  tarea.finally(() => { if (actualizaciones.get(telefono) === tarea) actualizaciones.delete(telefono); });
+}
+function resumen(datos = voluntarios) {
+  const filas = Object.entries(datos).map(([codigo, v]) => ({ codigo, ...v, pago: v.leads * EVENTO.pagoPorLead }));
+  const total = filas.reduce((n, v) => n + v.leads, 0);
+  return { voluntarios: filas, total, pagoTotal: total * EVENTO.pagoPorLead, pagoPorLead: EVENTO.pagoPorLead };
+}
+const json = (res, status, datos) => res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }).end(JSON.stringify(datos));
+function autorizarPanel(res, url) {
+  if (!PANEL) { json(res, 503, { ok: false, error: "sin clave" }); return false; }
+  if (url.searchParams.get("clave") !== PANEL) { json(res, 401, { ok: false, error: "Clave incorrecta" }); return false; }
+  return true;
+}
+async function cuerpo(req) {
+  const trozos = []; let bytes = 0;
+  for await (const trozo of req) {
+    bytes += trozo.length;
+    if (bytes > 16384) throw new Error("JSON demasiado grande");
+    trozos.push(trozo);
+  }
+  let d;
+  try { d = JSON.parse(Buffer.concat(trozos).toString("utf8")); } catch { throw new Error("JSON inválido"); }
+  if (!d || typeof d !== "object" || Array.isArray(d)) throw new Error("Se espera un objeto JSON");
+  return d;
+}
+async function api(req, res, url) {
+  const ruta = url.pathname;
+  if (ruta.startsWith("/api/voluntarios") || ruta === "/voluntarios.html") {
+    if (!autorizarPanel(res, url)) return true;
+    if (ruta === "/voluntarios.html") return false;
+  }
+  if (!ruta.startsWith("/api/") || ruta === "/api/red") return false;
+  try {
+    if (ruta === "/api/lead" && req.method === "POST") {
+      const d = await cuerpo(req), telefono = telefonoNormal(d.telefono);
+      const nombre = String(d.nombre || "").trim(), correo = String(d.correo || "").trim();
+      if (nombre.length < 2 || telefono.length < 8 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo) || d.consiente !== true)
+        throw new Error("Nombre, teléfono, correo y consentimiento son obligatorios");
+      if (d.carrera != null && !carreraPorId(d.carrera)) throw new Error("Carrera inválida");
+      if (!["mando", "mesa"].includes(d.origen)) throw new Error("Origen inválido");
+      const previo = leads.get(telefono);
+      if (previo) {
+        if (!previo.carrera && d.carrera) { previo.carrera = d.carrera; evento({ ...previo, t: "lead" }); }
+        json(res, 200, { ok: true, duplicado: true }); return true;
+      }
+      const lead = { t: "lead", nombre, telefono, correo, consiente: true, carrera: d.carrera || null,
+        voluntario: codigoNormal(d.voluntario), origen: d.origen, fecha: new Date().toISOString() };
+      leads.set(telefono, lead); evento(lead);
+      const codigo = lead.voluntario || "stand";
+      voluntarios[codigo] ||= { nombre: "", leads: 0 };
+      voluntarios[codigo].leads++; guardarVoluntarios();
+      json(res, 200, { ok: true, duplicado: false }); void crearLeadBitrix(lead); return true;
+    }
+    if (ruta === "/api/resultado" && req.method === "POST") {
+      const d = await cuerpo(req), telefono = telefonoNormal(d.telefono);
+      if (telefono.length < 8 || !Number.isInteger(d.puesto) || d.puesto < 1 || d.puesto > 4 ||
+          !Number.isFinite(d.tiempo) || d.tiempo < 0 || typeof d.curso !== "string" || !d.curso.trim()) throw new Error("Resultado inválido");
+      const r = { t: "resultado", telefono, nombre: String(d.nombre || ""), puesto: d.puesto, tiempo: d.tiempo,
+        carrera: carreraPorId(d.carrera)?.id || null, curso: d.curso, fecha: new Date().toISOString() };
+      resultados.set(telefono, [...(resultados.get(telefono) || []), r]); evento(r);
+      json(res, 200, { ok: true });
+      if (leads.get(telefono)?.bitrixId) actualizarResultadoBitrix(telefono);
+      else if (WEBHOOK) setTimeout(() => actualizarResultadoBitrix(telefono), 20000).unref();
+      return true;
+    }
+    if (ruta === "/api/voluntarios" && req.method === "POST") {
+      const d = await cuerpo(req), codigo = codigoNormal(d.codigo);
+      if (!codigo || typeof d.nombre !== "string") throw new Error("Código o nombre inválido");
+      voluntarios[codigo] = { nombre: d.nombre.trim().slice(0, 100), leads: voluntarios[codigo]?.leads || 0 };
+      guardarVoluntarios(); json(res, 200, { ok: true }); return true;
+    }
+    if (ruta === "/api/voluntarios" && req.method === "GET") { json(res, 200, resumen()); return true; }
+    if (ruta === "/api/voluntarios/bitrix" && req.method === "GET") {
+      if (!WEBHOOK) { json(res, 503, { ok: false, error: "Bitrix no configurado" }); return true; }
+      const conteo = Object.create(null), vistos = new Set(), paginas = new Set();
+      for (const [c, v] of Object.entries(voluntarios)) conteo[c] = { nombre: v.nombre, leads: 0 };
+      let start = 0;
+      try {
+        do {
+          if (paginas.has(start)) throw new Error("Bitrix: paginación inválida");
+          paginas.add(start);
+          const d = await bitrix("crm.lead.list", { filter: { SOURCE_ID: "CONNECTOR_DAY_2026" }, select: ["ID", "UTM_SOURCE", "PHONE"], start });
+          if (!Array.isArray(d.result)) throw new Error("Bitrix: lista inválida");
+          for (const lead of d.result) {
+            const telefono = telefonoNormal(lead.PHONE?.[0]?.VALUE);
+            const key = telefono || `id:${lead.ID}`;
+            if (vistos.has(key)) continue;
+            vistos.add(key);
+            const c = codigoNormal(lead.UTM_SOURCE) || "stand";
+            const codigo = String(lead.UTM_SOURCE).toLowerCase() === "stand" ? "stand" : c;
+            conteo[codigo] ||= { nombre: voluntarios[codigo]?.nombre || "", leads: 0 };
+            conteo[codigo].leads++;
+          }
+          start = d.next;
+        } while (start != null);
+        json(res, 200, { ...resumen(conteo), fuente: "bitrix" });
+      } catch (e) { console.error(e.message); json(res, 502, { ok: false, error: e.message }); }
+      return true;
+    }
+    if (ruta === "/api/voluntarios.csv" && req.method === "GET") {
+      const celda = v => '"' + String(v).replace(/^[=+@-]/, "'$&").replaceAll('"', '""') + '"';
+      const csv = ["codigo,nombre,leads,pago", ...resumen().voluntarios.map(v => [v.codigo, v.nombre, v.leads, v.pago].map(celda).join(","))].join("\r\n");
+      res.writeHead(200, { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="voluntarios.csv"', "Cache-Control": "no-store" }).end(csv); return true;
+    }
+    json(res, 404, { ok: false, error: "Endpoint o método no disponible" });
+  } catch (e) { json(res, 400, { ok: false, error: e.message }); }
+  return true;
+}
 
 const TIPOS = {
   ".html": "text/html; charset=utf-8",
@@ -110,6 +319,10 @@ function manejarMensaje(con, texto) {
   if (m.t === "unirse") {
     const sala = salas.get(String(m.sala || "").toUpperCase());
     if (!sala) { enviar(con, { t: "error", msg: "Esa sala no existe. Revise el código." }); return; }
+    if (con.papel === "mando" && con.sala === String(m.sala).toUpperCase() && sala.mandos.get(con.carril) === con) {
+      enviar(con, { t: "bienvenida", carril: con.carril }); return;
+    }
+    if (con.papel === "mando") soltarMando(con);
     let carril = null;
     for (let i = 0; i < CARRILES; i++) if (!sala.mandos.has(i)) { carril = i; break; }
     if (carril === null) { enviar(con, { t: "error", msg: "Los cuatro carriles están ocupados." }); return; }
@@ -120,7 +333,10 @@ function manejarMensaje(con, texto) {
     con.ficha = {
       nombre: String(m.nombre || "").slice(0, 18),
       telefono: String(m.telefono || "").slice(0, 24),
-      correo: String(m.correo || "").slice(0, 60)
+      correo: String(m.correo || "").slice(0, 60),
+      carrera: carreraPorId(m.carrera)?.id || null,
+      sticker: carreraPorId(m.carrera)?.sticker || null,
+      voluntario: codigoNormal(m.voluntario)
     };
     sala.mandos.set(carril, con);
     enviar(con, { t: "bienvenida", carril });
@@ -242,8 +458,16 @@ function atenderSocket(req, socket) {
 
 /* ───────── HTTP ───────── */
 
-const servidor = http.createServer((req, res) => {
-  const url = decodeURIComponent(req.url.split("?")[0]);
+const servidor = http.createServer(async (req, res) => {
+  let direccion, url;
+  try {
+    direccion = new URL(req.url, "http://localhost");
+    url = decodeURIComponent(direccion.pathname).replaceAll("\\", "/");
+    direccion.pathname = new URL(url, "http://localhost").pathname;
+    url = decodeURIComponent(direccion.pathname);
+  }
+  catch { res.writeHead(400).end("URL inválida"); return; }
+  if (await api(req, res, direccion)) return;
 
   if (url === "/api/red") {
     res.writeHead(200, { "Content-Type": TIPOS[".json"] });
@@ -255,7 +479,15 @@ const servidor = http.createServer((req, res) => {
     : url === "/mando" || url === "/mando/" ? "/mando.html"
     : url;
   const destino = path.normalize(path.join(RAIZ, relativa));
-  if (!destino.startsWith(RAIZ)) { res.writeHead(403).end("Prohibido"); return; }
+  const rel = path.relative(RAIZ, destino);
+  const datosRel = path.relative(DATA, destino);
+  // Windows no distingue mayúsculas; proteger también la ruta física final.
+  if (rel.toLowerCase() === "voluntarios.html" && !autorizarPanel(res, direccion)) return;
+  if (rel.startsWith("..") || path.isAbsolute(rel) || rel.split(path.sep)[0] === "data" || rel.split(path.sep).some(p => p.startsWith(".")) ||
+      (!datosRel.startsWith("..") && !path.isAbsolute(datosRel)) ||
+      ![".html", ".css", ".js", ".json", ".woff2", ".png", ".svg", ".ico"].includes(path.extname(destino))) {
+    res.writeHead(403).end("Prohibido"); return;
+  }
 
   fs.readFile(destino, (err, datos) => {
     if (err) { res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("No existe"); return; }

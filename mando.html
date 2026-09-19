@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#0F1210">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Su mando · Caballos de Fuerza</title>
+<title>Su mando · $ketch Race</title>
 <link rel="stylesheet" href="./fonts/fonts.css">
 <link rel="stylesheet" href="./style.css">
 <link rel="stylesheet" href="./mando.css">
@@ -15,22 +15,23 @@
 <!-- ════════ ENTRAR ════════ -->
 <section class="m-pantalla es-activa" id="m-entrar">
   <header class="m-cabecera">
-    <span class="m-marca"><img class="m-logo" src="./assets/brand/logo-vla-blanco.png" alt="VLA Academy"></span>
+    <div class="bar-left"><img class="m-logo" src="./assets/brand/logo-vla-blanco.png" alt="VLA"><div class="bar-sep"></div><div class="wordmark"><span class="cash">$</span>ketch Race</div></div>
   </header>
   <form class="m-cuerpo" id="m-ficha" novalidate>
     <div class="m-hero-corredor">
       <canvas id="m-hero" class="m-hero-lienzo"></canvas>
     </div>
     <h1 class="m-titulo">Su corredor<em>.</em></h1>
+    <svg class="subrayado" viewBox="0 0 150 12" aria-hidden="true"><path d="M2 6c20-6 40 6 60 0s40-6 60 0"/></svg>
     <p class="m-kicker">Cree su corredor. Gánele a todos. Lleve el premio.</p>
     <p class="m-motivo">
       Tenemos que ponerle nombre a esto. Su tiempo entra al ranking del evento —
-      <b>los mejores se llevan créditos VLA</b>, así que necesitamos cómo avisarle si gana.
+      <b>todos los que corren ganan créditos VLA</b>, así que necesitamos cómo contactarle.
     </p>
 
-    <label class="m-campo m-campo-sala" id="m-campo-sala">
+    <label class="m-campo m-campo-sala" id="m-campo-sala" data-oculto>
       <span>Código de la sala</span>
-      <input type="text" id="m-sala" maxlength="4" autocapitalize="characters" autocomplete="off"
+      <input type="text" id="m-sala-valor" maxlength="4" autocapitalize="characters" autocomplete="off"
              inputmode="text" placeholder="ABCD" class="m-sala-input">
     </label>
     <label class="m-campo">
@@ -48,6 +49,7 @@
       <span>Correo electrónico <i>· obligatorio</i></span>
       <input type="email" id="m-correo" maxlength="60" inputmode="email" autocomplete="off" placeholder="nombre@ejemplo.com">
     </label>
+    <fieldset class="m-carreras"><legend>¿Con qué salario querés arrancar?</legend><div id="m-rutas" class="routes"></div><p id="m-nota" class="source"></p></fieldset>
     <label class="m-permiso">
       <input type="checkbox" id="m-consent">
       <span>Autorizo a VLA a contactarme para avisarme si gano y para hablarme de sus certificaciones.</span>
@@ -59,6 +61,16 @@
 </section>
 
 <!-- ════════ DIBUJO ════════ -->
+<section class="m-pantalla" id="m-volver">
+  <div class="m-centro"><h1 class="m-titulo" id="m-saludo"></h1><p class="m-chip" id="m-carrera-guardada"></p>
+  <button class="m-accion" id="m-volver-entrar">Entrar a la sala</button><button class="m-enlace" id="m-no-soy">No soy yo</button></div>
+</section>
+<section class="m-pantalla" id="m-sala">
+  <form class="m-centro" id="m-elegir-sala"><h1 class="m-titulo">¿En qué pantalla vas a correr?</h1>
+    <label class="m-campo"><span>Código de la sala</span><input id="m-codigo" class="m-sala-input" maxlength="4" pattern="[A-Za-z]{4}" required autocapitalize="characters" autocomplete="off" placeholder="ABCD"></label>
+    <p class="m-sub">Está en la pantalla del stand, debajo del QR</p><p class="m-aviso" id="m-error-sala" role="alert"></p><button class="m-accion">Entrar</button>
+  </form>
+</section>
 <section class="m-pantalla" id="m-dibujo">
   <header class="m-cabecera">
     <span class="m-marca">Su corredor<i id="m-carril-1">1</i></span>
@@ -98,17 +110,21 @@
     <span class="m-metros" id="m-metros"></span>
   </div>
   <button class="m-boton m-boton-salto" id="m-salto"><i>↑</i>Saltar</button>
-  <button class="m-boton m-boton-correr" id="m-correr">¡Arre!</button>
+  <button class="m-boton m-boton-correr" id="m-correr">¡Correr!</button>
   <button class="m-boton m-boton-agache" id="m-agache"><i>↓</i>Agacharse</button>
   <p class="m-pista" id="m-pista">Ritmo constante gana</p>
 </section>
 
 <!-- ════════ FIN ════════ -->
 <section class="m-pantalla" id="m-fin">
-  <div class="m-centro">
-    <h2 class="m-titulo">Gracias<em>.</em></h2>
-    <p class="m-sub">Mire la pantalla grande para ver el acta.</p>
-    <button class="m-accion" id="m-otra">Volver a entrar</button>
+  <div class="m-cuerpo m-premio">
+    <p class="m-kicker">Su resultado</p><h1 class="m-titulo m-resultado" id="m-fin-puesto">4.º</h1>
+    <svg class="subrayado" viewBox="0 0 150 12" aria-hidden="true"><path d="M2 6c20-6 40 6 60 0s40-6 60 0"/></svg>
+    <p id="m-fin-tiempo"></p><div id="m-fin-carrera"></div><p class="source" id="m-fin-nota"></p>
+    <div class="m-premio-bloque"><h2 id="m-premio-titulo"></h2><p id="m-premio-detalle"></p><p>Todos los que corren ganan. Reclamalo ahora mismo:</p></div>
+    <a class="m-accion" id="m-reclamar" target="_blank" rel="noopener">Reclamar por WhatsApp</a>
+    <a class="m-accion m-secundario" id="m-webinar" target="_blank" rel="noopener">Cupo al webinar del 24 · Cómo no ser reemplazado por la IA</a>
+    <button class="m-enlace" id="m-otra">Correr otra vez</button>
   </div>
 </section>
 

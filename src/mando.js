@@ -10,6 +10,9 @@
 import { crearTablero, caballoDeMuestra } from "./draw.js";
 import { normalizar, miniatura } from "./scene.js";
 import { crearHero } from "./hero.js";
+import { CARRERAS, carreraPorId, NOTA_SALARIOS } from "./carreras.js";
+import { stickerPorCodigo } from "./stickers.js";
+import { EVENTO, premioPorPuesto, linkWhatsApp, mensajePremio, mensajeWebinar } from "./config.js";
 
 const $ = s => document.querySelector(s);
 const CARRILES = ["#00E676", "#FF6200", "#22D3EE", "#E879F9"];
@@ -42,7 +45,7 @@ function conectar(alAbrir) {
   ws.addEventListener("open", () => { avisar(""); estado.reintentos = 0; alAbrir?.(); });
   ws.addEventListener("message", e => { try { recibir(JSON.parse(e.data)); } catch { /* ruido */ } });
   ws.addEventListener("close", () => {
-    if (estado.fase === "entrar") return;
+    if (["entrar", "sala", "volver", "fin"].includes(estado.fase)) { avisar("Sin conexión. Puede volver a intentar entrar."); return; }
     avisar("Se perdió la conexión. Reintentando…");
     // El WiFi de una feria se cae; el mando tiene que volver solo
     const espera = Math.min(4000, 400 * 2 ** estado.reintentos++);
@@ -82,48 +85,126 @@ function recibir(m) {
       ir("espera");
     }
     else if (m.fase === "carrera") { prepararJuego(m.curso); ir("juego"); }
-    else if (m.fase === "acta" || m.fase === "fin") { ir("fin"); }
+    else if (m.fase === "acta" || m.fase === "fin") { pintarPremio(); ir("fin"); }
     return;
   }
 
-  if (m.t === "marcador") pintarMarcador(m);
+  if (m.t === "marcador") {
+    if (m.final || !estado.marcador?.final) estado.marcador = { ...estado.marcador, ...m };
+    pintarMarcador(m);
+    if (estado.fase === "fin" || m.final) { pintarPremio(); if (m.final) ir("fin"); }
+  }
 }
 
 /* ═════════ Entrar ═════════ */
 
-const TELEFONO_OK = t => (t.match(/\d/g) || []).length >= 8;
-const CORREO_OK = c => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(c);
-
-// El código puede venir en el QR: ?s=ABCD — si vino solo, no hace falta mostrarlo
-const desdeURL = new URLSearchParams(location.search).get("s");
-if (desdeURL) {
-  $("#m-sala").value = desdeURL.toUpperCase().slice(0, 4);
-  $("#m-campo-sala").setAttribute("data-oculto", "");
+const PERFIL = "sr-perfil-v1";
+const params = new URLSearchParams(location.search);
+const desdeURL = (params.get("s") || "").trim().toUpperCase();
+let perfil = {};
+try { perfil = JSON.parse(localStorage.getItem(PERFIL)) || {}; } catch { /* almacenamiento restringido */ }
+if (typeof perfil !== "object" || Array.isArray(perfil)) perfil = {};
+const guardarPerfil = () => { try { localStorage.setItem(PERFIL, JSON.stringify(perfil)); } catch { /* continuar en memoria */ } };
+function atribuirURL() {
+  if (!params.has("v")) return;
+  const v = params.get("v").trim().toUpperCase();
+  perfil.voluntario = /^[A-Z0-9_-]{2,20}$/.test(v) ? v : null;
+  guardarPerfil();
 }
-
-$("#m-ficha").addEventListener("submit", e => {
-  e.preventDefault();
-  const err = $("#m-error");
-  const sala = $("#m-sala").value.trim().toUpperCase();
-  const nombre = $("#m-nombre").value.trim();
-  const telLocal = $("#m-tel").value.trim();
-  const telefono = "+506 " + telLocal;
-  const correo = $("#m-correo").value.trim();
-
-  if (sala.length !== 4) { err.textContent = "El código de la sala son cuatro letras."; return; }
-  if (nombre.length < 2) { err.textContent = "Escriba su nombre."; return; }
-  if (!TELEFONO_OK(telLocal)) { err.textContent = "Escriba un WhatsApp válido: al menos ocho dígitos."; return; }
-  if (!CORREO_OK(correo)) { err.textContent = "Escriba un correo válido, con arroba y dominio."; return; }
-  if (!$("#m-consent").checked) { err.textContent = "Hay que marcar la autorización para poder correr."; return; }
-
-  err.textContent = "";
-  estado.ficha = { sala, nombre, telefono, correo };
-  $("#m-entrar-btn").disabled = true;
-  conectar(() => {
-    enviar({ t: "unirse", ...estado.ficha });
-    $("#m-entrar-btn").disabled = false;
-  });
+atribuirURL();
+const tienePerfil = () => typeof perfil.nombre === "string" && perfil.nombre.trim().length >= 2 &&
+  String(perfil.telefono || "").replace(/\D/g, "").length >= 8 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(perfil.correo || "") && carreraPorId(perfil.carrera);
+const marca = $("#m-entrar .m-cabecera");
+for (const id of ["m-volver", "m-sala", "m-fin"]) $("#" + id).prepend(marca.cloneNode(true));
+for (const id of ["m-entrar", "m-fin"]) {
+  for (const [clase, d] of [["tl", "M0 5V0h5"], ["tr", "M13 5V0H8"], ["bl", "M0 8v5h5"], ["br", "M13 8v5H8"]]) {
+    const tick = document.createElement("span"); tick.className = "tick " + clase;
+    tick.setAttribute("aria-hidden", "true");
+    tick.innerHTML = '<svg viewBox="0 0 13 13"><path d="' + d + '"/></svg>';
+    $("#" + id).append(tick);
+  }
+}
+function filaCarrera(c, seleccionable = false) {
+  const fila = document.createElement(seleccionable ? "label" : "div"); fila.className = "route";
+  const info = document.createElement("span"); info.className = "route-info";
+  const nombre = document.createElement("span"); nombre.className = "route-name";
+  if (seleccionable) nombre.innerHTML = '<svg class="check" viewBox="0 0 16 16" aria-hidden="true"><path d="m2 8 4 4 8-9"/></svg>';
+  // AIB en stickers.js no es un logo oficial: aquí solo van los tres aprobados.
+  const logo = ["CYB", "AWS", "CCNA"].includes(c.sticker) && stickerPorCodigo(c.sticker)?.logo;
+  if (logo) { const img = document.createElement("img"); img.className = "cert-logo"; img.src = "./stickers/" + logo; img.alt = ""; nombre.append(img); }
+  nombre.append(document.createTextNode(c.nombre));
+  const cert = document.createElement("span"); cert.className = "route-sub"; cert.textContent = c.cert;
+  info.append(nombre, cert);
+  if (!seleccionable) { const uso = document.createElement("span"); uso.className = "route-sub"; uso.textContent = c.aplicacion; info.append(uso); }
+  const salario = document.createElement("span"); salario.className = "amount" + (c.salario ? "" : " demand"); salario.textContent = c.salario || c.demanda;
+  if (c.salario) { const unidad = document.createElement("span"); unidad.className = "unit"; unidad.textContent = "al mes"; salario.append(unidad); }
+  fila.append(info, salario); return fila;
+}
+for (const c of CARRERAS) {
+  const radio = document.createElement("input"); radio.type = "radio"; radio.name = "carrera"; radio.value = c.id;
+  radio.id = "ruta-" + c.id; radio.className = "route-radio"; radio.required = true; radio.checked = perfil.carrera === c.id;
+  const fila = filaCarrera(c, true); fila.htmlFor = radio.id; fila.classList.toggle("selected", radio.checked);
+  radio.addEventListener("change", () => document.querySelectorAll(".route-radio").forEach(r => r.nextElementSibling.classList.toggle("selected", r.checked)));
+  $("#m-rutas").append(radio, fila);
+}
+$("#m-nota").textContent = $("#m-fin-nota").textContent = NOTA_SALARIOS;
+$("#m-nombre").value = perfil.nombre || "";
+const tel = String(perfil.telefono || "").replace(/\D/g, "");
+$("#m-tel").value = tel.length === 11 && tel.startsWith("506") ? tel.slice(3) : tel;
+$("#m-correo").value = perfil.correo || "";
+$("#m-consent").checked = !!tienePerfil();
+$("#m-sala-valor").value = desdeURL;
+$("#m-entrar-btn").textContent = desdeURL ? "Entrar a la sala" : "Elegir y continuar";
+if (desdeURL && tienePerfil()) {
+  $("#m-saludo").textContent = "Hola de nuevo, " + perfil.nombre;
+  $("#m-carrera-guardada").textContent = carreraPorId(perfil.carrera).nombre;
+  ir("volver");
+}
+function entrarSala(sala) {
+  if (!/^[A-Z]{4}$/.test(sala)) { avisar("El código de la sala son cuatro letras."); return; }
+  estado.ficha = { ...perfil, sala, sticker: carreraPorId(perfil.carrera)?.sticker || null };
+  estado.sala = sala;
+  const url = new URL(location.href); url.searchParams.set("s", sala); history.replaceState(null, "", url);
+  avisar("Conectando a la sala…");
+  if (estado.ws?.readyState === WebSocket.OPEN) enviar({ t: "unirse", ...estado.ficha });
+  else if (estado.ws?.readyState !== WebSocket.CONNECTING) conectar(() => enviar({ t: "unirse", ...estado.ficha }));
+}
+$("#m-volver-entrar").addEventListener("click", () => entrarSala(desdeURL));
+$("#m-no-soy").addEventListener("click", () => {
+  perfil = {}; try { localStorage.removeItem(PERFIL); } catch { /* sin storage */ }
+  atribuirURL();
+  $("#m-ficha").reset(); document.querySelectorAll(".route.selected").forEach(r => r.classList.remove("selected")); avisar(""); ir("entrar");
 });
+$("#m-elegir-sala").addEventListener("submit", e => { e.preventDefault(); entrarSala($("#m-codigo").value.trim().toUpperCase()); });
+$("#m-ficha").addEventListener("submit", async e => {
+  e.preventDefault();
+  const err = $("#m-error"), nombre = $("#m-nombre").value.trim(), correo = $("#m-correo").value.trim();
+  let telefono = $("#m-tel").value.replace(/\D/g, "");
+  const carrera = $("input[name=carrera]:checked")?.value;
+  if (nombre.length < 2) { err.textContent = "Escriba su nombre."; return; }
+  if (telefono.length < 8) { err.textContent = "Escriba un WhatsApp válido: al menos ocho dígitos."; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { err.textContent = "Escriba un correo válido, con arroba y dominio."; return; }
+  if (!carrera) { err.textContent = "Elegí una carrera para su corredor."; return; }
+  if (!$("#m-consent").checked) { err.textContent = "Hay que marcar la autorización para poder correr."; return; }
+  if (telefono.length === 8) telefono = "506" + telefono;
+  perfil = { nombre, telefono, correo, carrera, voluntario: perfil.voluntario || null }; guardarPerfil();
+  err.textContent = ""; $("#m-entrar-btn").disabled = true;
+  const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 4000);
+  try { await fetch("/api/lead", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...perfil, consiente: true, origen: "mando" }), signal: controller.signal }); }
+  catch { /* La mesa recibe la misma ficha en jinete como respaldo. */ }
+  finally { clearTimeout(timeout); $("#m-entrar-btn").disabled = false; }
+  if (desdeURL) entrarSala(desdeURL); else ir("sala");
+});
+function pintarPremio() {
+  const m = estado.marcador || {}, puesto = Number.isInteger(m.puesto) && m.puesto >= 1 && m.puesto <= 4 ? m.puesto : 4;
+  const tiempo = m.tiempo ?? m.meta, c = carreraPorId(perfil.carrera), premio = premioPorPuesto(puesto);
+  $("#m-fin-puesto").textContent = puesto + ".º";
+  $("#m-fin-tiempo").textContent = Number.isFinite(tiempo) ? tiempo.toFixed(2) + " s" : "";
+  $("#m-fin-carrera").replaceChildren(...(c ? [filaCarrera(c)] : []));
+  $("#m-premio-titulo").textContent = premio.titulo; $("#m-premio-detalle").textContent = premio.detalle;
+  $("#m-reclamar").href = linkWhatsApp(mensajePremio({ nombre: perfil.nombre || "", puesto, carrera: c?.nombre }));
+  $("#m-webinar").href = EVENTO.webinar.url || linkWhatsApp(mensajeWebinar({ nombre: perfil.nombre || "" }));
+}
 
 /* ═════════ Dibujo ═════════ */
 
@@ -158,6 +239,7 @@ $("#m-listo").addEventListener("click", () => {
 const bSalto = $("#m-salto"), bCorrer = $("#m-correr"), bAgache = $("#m-agache");
 
 function prepararJuego(curso) {
+  estado.marcador = null;
   const conObstaculos = !!curso?.obstaculos;
   bSalto.hidden = !conObstaculos;
   bAgache.hidden = !conObstaculos;

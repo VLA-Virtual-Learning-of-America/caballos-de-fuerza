@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Voluntarios · $ketch Race</title>
+<link rel="stylesheet" href="./fonts/fonts.css"><link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./mando.css">
+<style>
+body{overflow:auto;padding:24px;max-width:1000px;margin:auto}
+h1{font-size:2rem;margin:28px 0 16px}h2{font-size:1.2rem}
+.acciones{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}.acciones>*{width:auto;margin:0}
+.tabla{overflow-x:auto}table{border-collapse:collapse;width:100%;text-align:left}th,td{padding:14px 8px;border-bottom:1px solid var(--filete)}
+tfoot{font-weight:700;color:var(--vla)}form{display:flex;gap:16px;align-items:end;flex-wrap:wrap;border-top:1px solid var(--filete);padding-top:16px}form .m-accion{width:auto}
+#v-qr{margin:24px auto;max-width:420px;text-align:center}canvas{display:block;width:100%;height:auto;max-width:360px;margin:12px auto}
+.qr-codigo{font-size:2rem;font-weight:700}.qr-url{overflow-wrap:anywhere;font-size:.8rem;color:var(--texto-3)}
+#v-impresion{display:none}.qr-tarjeta{border:1px solid var(--filete);padding:20px;text-align:center;break-inside:avoid}
+@media print{body{padding:0;max-width:none;background:white;color:black}body>*:not(#v-impresion){display:none!important}#v-impresion{display:grid;grid-template-columns:1fr 1fr;gap:12mm}.qr-tarjeta{border:1px solid #888;padding:8mm}.qr-tarjeta canvas{width:60mm;height:60mm}.qr-url{color:black}}
+</style>
+</head>
+<body>
+<header class="m-cabecera"><div class="bar-left"><img class="m-logo" src="./assets/brand/logo-vla-blanco.png" alt="VLA"><div class="bar-sep"></div><div class="wordmark"><span class="cash">$</span>ketch Race</div></div></header>
+<h1>Voluntarios</h1><p id="v-estado" role="status" aria-live="polite"></p>
+<div class="acciones"><button class="m-chico" id="v-recontar">Recontar desde Bitrix</button><button class="m-chico" id="v-imprimir">Imprimir todos</button><a class="m-chico" id="v-csv">Descargar CSV</a></div>
+<div class="tabla"><table><thead><tr><th>Código</th><th>Nombre</th><th>Leads</th><th>$ a pagar</th><th>QR</th></tr></thead><tbody id="v-filas"></tbody><tfoot><tr><td colspan="2">Total</td><td id="v-total">0</td><td id="v-pago">$0</td><td></td></tr></tfoot></table></div>
+<p id="v-tarifa"></p>
+<form id="v-alta"><label class="m-campo"><span>Código</span><input id="v-codigo" required minlength="2" maxlength="20" pattern="[A-Za-z0-9_-]{2,20}" autocapitalize="characters"></label><label class="m-campo"><span>Nombre</span><input id="v-nombre" required maxlength="100"></label><button class="m-accion">Guardar voluntario</button></form>
+<section id="v-qr" hidden aria-label="QR del voluntario"></section><div id="v-impresion"></div>
+<script type="module" src="./src/voluntarios.js"></script>
+</body></html>
