@@ -37,7 +37,7 @@ function mostrar(d) {
     // Link propio del voluntario: lo abre en su celular y muestra su QR sin necesitar la clave del panel.
     const propio = `${location.origin}/qr?v=${encodeURIComponent(v.codigo)}&n=${encodeURIComponent(v.nombre || "")}`;
     const enviar = document.createElement("a"); enviar.className = "m-chico"; enviar.textContent = "Enviar";
-    enviar.href = `https://wa.me/?text=${encodeURIComponent(`Tu QR de voluntario para $ketch Race (abrilo en tu celular y mostralo): ${propio}`)}`;
+    enviar.href = `https://wa.me/?text=${encodeURIComponent(`Tu QR de asesor educativo para $ketch Race (abrilo en tu celular y mostralo al visitante): ${propio}`)}`;
     enviar.target = "_blank"; enviar.rel = "noopener";
     const copiar = document.createElement("button"); copiar.className = "m-chico"; copiar.textContent = "Copiar link";
     copiar.addEventListener("click", async () => {

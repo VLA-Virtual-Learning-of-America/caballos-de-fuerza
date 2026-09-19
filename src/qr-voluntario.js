@@ -22,9 +22,9 @@ if (!codigo) {
   const lienzo = $("#qr-lienzo");
   pintarQR(lienzo, url, { claro: "#F2F6F2", oscuro: "#0F1210" });
   $("#qr-codigo").textContent = codigo;
-  $("#qr-nombre").textContent = nombre;
+  $("#qr-nombre").textContent = nombre || "Asesor VLA";
   $("#qr-url").textContent = url;
-  document.title = `${codigo} · Mi QR · $ketch Race`;
+  document.title = `${nombre || codigo} · Asesor educativo · $ketch Race`;
 
   $("#qr-guardar").addEventListener("click", () => {
     lienzo.toBlob(b => {
