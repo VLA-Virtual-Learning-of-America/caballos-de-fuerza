@@ -27,6 +27,8 @@ body.mando{
 .m-premio{gap:14px}.m-resultado{font-size:5rem!important;margin-top:8px}
 .m-premio-bloque{border-top:1px solid var(--filete);border-bottom:1px solid var(--filete);padding:20px 0}
 .m-premio-bloque h2{color:var(--vla);margin-bottom:8px}.m-premio-bloque p{line-height:1.5}
+.m-hecho{margin-top:18px;padding-top:14px;border-top:1px solid var(--filete-suave);font-size:.95rem;line-height:1.5;color:var(--texto-2)}
+.m-hecho b{color:var(--texto)}
 a.m-accion{display:block;text-align:center;text-decoration:none}
 .m-secundario{background:none!important;color:var(--texto)!important;border:1px solid var(--filete)!important;font-size:.95rem!important}
 .m-boton[data-ya]{box-shadow:none!important;outline:3px solid var(--carril,var(--vla))}
