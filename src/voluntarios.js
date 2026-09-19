@@ -34,7 +34,17 @@ function mostrar(d) {
       try { $("#v-qr").replaceChildren(tarjeta(v)); $("#v-qr").hidden = false; $("#v-qr").scrollIntoView({ behavior: "smooth" }); }
       catch (e) { $("#v-estado").textContent = e.message; }
     });
-    td.append(boton); fila.append(td); $("#v-filas").append(fila);
+    // Link propio del voluntario: lo abre en su celular y muestra su QR sin necesitar la clave del panel.
+    const propio = `${location.origin}/qr?v=${encodeURIComponent(v.codigo)}&n=${encodeURIComponent(v.nombre || "")}`;
+    const enviar = document.createElement("a"); enviar.className = "m-chico"; enviar.textContent = "Enviar";
+    enviar.href = `https://wa.me/?text=${encodeURIComponent(`Tu QR de voluntario para $ketch Race (abrilo en tu celular y mostralo): ${propio}`)}`;
+    enviar.target = "_blank"; enviar.rel = "noopener";
+    const copiar = document.createElement("button"); copiar.className = "m-chico"; copiar.textContent = "Copiar link";
+    copiar.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(propio); copiar.textContent = "Copiado"; setTimeout(() => { copiar.textContent = "Copiar link"; }, 1500); }
+      catch { $("#v-estado").textContent = propio; }
+    });
+    td.style.whiteSpace = "nowrap"; td.append(boton, " ", enviar, " ", copiar); fila.append(td); $("#v-filas").append(fila);
   }
   $("#v-total").textContent = d.total; $("#v-pago").textContent = dinero(d.pagoTotal);
   $("#v-tarifa").textContent = `${dinero(d.pagoPorLead)} por lead válido`;

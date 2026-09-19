@@ -477,6 +477,7 @@ const servidor = http.createServer(async (req, res) => {
 
   const relativa = url === "/" ? "/index.html"
     : url === "/mando" || url === "/mando/" ? "/mando.html"
+    : url === "/qr" || url === "/qr/" ? "/qr.html"
     : url;
   const destino = path.normalize(path.join(RAIZ, relativa));
   const rel = path.relative(RAIZ, destino);

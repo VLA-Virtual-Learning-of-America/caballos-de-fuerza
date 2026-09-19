@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F1210">
+<meta name="referrer" content="no-referrer">
+<title>Mi QR · $ketch Race</title>
+<link rel="stylesheet" href="./fonts/fonts.css">
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./mando.css">
+<style>
+  body{overflow:auto}
+  .qr-pantalla{min-height:100dvh;display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px 20px 32px;text-align:center}
+  .qr-cabecera{width:100%;display:flex;justify-content:center;padding-bottom:12px;border-bottom:1px solid var(--filete-suave)}
+  .qr-marco{background:#F2F6F2;border-radius:6px;padding:14px;margin-top:10px}
+  #qr-lienzo{display:block;width:min(78vw,340px);height:auto}
+  .qr-codigo{font-size:2.6rem;font-weight:700;letter-spacing:.16em;color:var(--vla);line-height:1}
+  .qr-nombre{font-size:1.1rem;color:var(--texto)}
+  .qr-pitch{max-width:34ch;font-size:1.02rem;line-height:1.45;color:var(--texto-2);border-top:1px solid var(--filete-suave);padding-top:14px}
+  .qr-pitch b{color:var(--vla)}
+  .qr-url{font-size:.78rem;color:var(--texto-3);overflow-wrap:anywhere}
+  .qr-acciones{display:flex;gap:10px;width:100%;max-width:420px}
+  .qr-acciones button{flex:1}
+  .qr-vacio{color:var(--alarma)}
+</style>
+</head>
+<body class="mando">
+<main class="qr-pantalla">
+  <header class="qr-cabecera">
+    <div class="bar-left"><img class="m-logo" src="./assets/brand/logo-vla-blanco.png" alt="VLA"><div class="bar-sep"></div><div class="wordmark"><span class="cash">$</span>ketch Race</div></div>
+  </header>
+  <p class="m-kicker">Mi código de voluntario</p>
+  <div class="qr-marco"><canvas id="qr-lienzo" width="720" height="720"></canvas></div>
+  <p class="qr-codigo" id="qr-codigo">····</p>
+  <p class="qr-nombre" id="qr-nombre"></p>
+  <p class="qr-pitch">Mostrá esta pantalla: <b>«¿Querés ganarte créditos VLA? Escaneá y corré.»</b> Cada persona que se registre con tu código cuenta para vos.</p>
+  <p class="qr-url" id="qr-url"></p>
+  <div class="qr-acciones">
+    <button class="m-chico" id="qr-guardar">Guardar imagen</button>
+    <button class="m-chico" id="qr-compartir">Compartir link</button>
+  </div>
+  <p class="m-aviso" id="qr-error" role="alert"></p>
+</main>
+<script type="module" src="./src/qr-voluntario.js"></script>
+</body>
+</html>
