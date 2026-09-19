@@ -17,11 +17,12 @@ export const EVENTO = Object.freeze({
 
   // Premios por puesto. Todos ganan: el puesto solo cambia el monto.
   // Precedente real (Expo U 2024 en Bitrix): "$25 (VLA Cred.)", "$75 + asesoría".
+  // Montos definidos por Josué el 19-sep-2026 (día del evento).
   premios: [
-    { puesto: 1, titulo: "$100 en créditos VLA", detalle: "+ una asesoría de carrera gratis" },
-    { puesto: 2, titulo: "$75 en créditos VLA", detalle: "" },
-    { puesto: 3, titulo: "$50 en créditos VLA", detalle: "" },
-    { puesto: 4, titulo: "$25 en créditos VLA", detalle: "" }
+    { puesto: 1, titulo: "$150 en créditos VLA", detalle: "+ una asesoría de carrera gratis" },
+    { puesto: 2, titulo: "$125 en créditos VLA", detalle: "" },
+    { puesto: 3, titulo: "$100 en créditos VLA", detalle: "" },
+    { puesto: 4, titulo: "$100 en créditos VLA", detalle: "" }
   ],
 
   webinar: {
