@@ -204,6 +204,18 @@ function pintarPremio() {
   $("#m-premio-titulo").textContent = premio.titulo; $("#m-premio-detalle").textContent = premio.detalle;
   $("#m-reclamar").href = linkWhatsApp(mensajePremio({ nombre: perfil.nombre || "", puesto, carrera: c?.nombre }));
   $("#m-webinar").href = EVENTO.webinar.url || linkWhatsApp(mensajeWebinar({ nombre: perfil.nombre || "" }));
+  // "Aplicá la IA a tu carrera": un botón por certificación, la propia resaltada.
+  // Sin página pública (AI Builders) el botón va al WhatsApp de ventas con el interés ya escrito.
+  $("#m-aplica").replaceChildren(...CARRERAS.map(k => {
+    const a = document.createElement("a");
+    a.href = k.url || linkWhatsApp(`Hola, soy ${perfil.nombre || ""}. Vengo del ${EVENTO.nombre} y quiero información sobre ${k.nombre} en VLA.`);
+    a.target = "_blank"; a.rel = "noopener";
+    if (k.id === perfil.carrera) a.setAttribute("data-propia", "");
+    const logo = stickerPorCodigo(k.sticker)?.logo;
+    if (logo) { const img = document.createElement("img"); img.src = `./stickers/${logo}`; img.alt = ""; a.append(img); }
+    a.append(document.createTextNode(`Aplicá IA a ${k.nombre}`));
+    return a;
+  }));
 }
 
 /* ═════════ Dibujo ═════════ */

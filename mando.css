@@ -27,6 +27,14 @@ body.mando{
 .m-premio{gap:14px}.m-resultado{font-size:5rem!important;margin-top:8px}
 .m-premio-bloque{border-top:1px solid var(--filete);border-bottom:1px solid var(--filete);padding:20px 0}
 .m-premio-bloque h2{color:var(--vla);margin-bottom:8px}.m-premio-bloque p{line-height:1.5}
+.m-reclama-titulo{font-size:clamp(1.6rem,7vw,2rem);font-weight:700;letter-spacing:-.03em;line-height:1.05;color:var(--texto);margin-top:12px}
+.m-reclama-titulo em{font-style:normal;color:var(--vla)}
+.m-aplica-titulo{font-size:var(--t-meta);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--texto-3);margin-top:14px}
+.m-aplica{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.m-aplica a{display:flex;align-items:center;gap:10px;padding:13px 14px;border:1px solid var(--filete);border-radius:999px;color:var(--texto);text-decoration:none;font-size:.95rem;font-weight:600}
+.m-aplica a[data-propia]{border-color:var(--vla);color:var(--vla)}
+.m-aplica a img{width:16px;height:16px;object-fit:contain;filter:brightness(0) invert(1)}
+.m-aplica a[data-propia] img{filter:brightness(0) invert(41%) sepia(84%) saturate(1872%) hue-rotate(107deg) brightness(103%) contrast(101%)}
 .m-hecho{margin-top:18px;padding-top:14px;border-top:1px solid var(--filete-suave);font-size:.95rem;line-height:1.5;color:var(--texto-2)}
 .m-hecho b{color:var(--texto)}
 a.m-accion{display:block;text-align:center;text-decoration:none}
